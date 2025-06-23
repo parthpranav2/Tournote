@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "502575591425",
+    "project_id": "tournote-bca70",
+    "storage_bucket": "tournote-bca70.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:502575591425:android:ae6ab731705ef773bb5000",
+        "android_client_info": {
+          "package_name": "com.example.tournote"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBDoILGDAQxjzv4BoiqbqQvROPUwROJUxY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
