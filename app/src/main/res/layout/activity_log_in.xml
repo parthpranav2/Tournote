@@ -8,6 +8,16 @@
     android:layout_height="match_parent"
     tools:context=".Activity.LogInActivity"
     android:background="@color/green_theme_Light">
+    <ProgressBar
+        android:id="@+id/bar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:elevation="10dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@android:color/holo_blue_dark" />
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"

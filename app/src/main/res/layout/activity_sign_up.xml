@@ -8,6 +8,16 @@
     tools:context=".Activity.SignUpActivity"
     android:background="@color/green_theme_Light"
     android:id="@+id/main">
+    <ProgressBar
+        android:id="@+id/bar"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        android:layout_centerInParent="true"
+        android:elevation="10dp"
+        android:indeterminate="true"
+        android:indeterminateTint="@android:color/holo_blue_dark" />
+
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
