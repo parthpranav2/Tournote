@@ -3,12 +3,21 @@ package com.example.tournote.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.InputType
+import android.util.Log
+import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.tournote.R
+import com.example.tournote.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivityLogInBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 
 
 class LogInActivity : AppCompatActivity() {
@@ -16,6 +25,19 @@ class LogInActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLogInBinding
 
+
+    private lateinit var googleSignInClient: GoogleSignInClient
+
+    private val launcher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == RESULT_OK) {
+                Log.e("authViewModel", "Google Sign In Result Received")
+                val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+                viewModel.handleSignInResult(task)
+            }
+        }
+
+    private val viewModel: authViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -29,6 +51,13 @@ class LogInActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
 
         binding.btnpasswordvisibility.setOnClickListener {
             val currentTypeface = binding.txtPass.typeface
@@ -51,6 +80,25 @@ class LogInActivity : AppCompatActivity() {
             redirectToActivity(SignUpActivity::class.java)
         }
 
+        observeModel()
+
+        binding.btnsignin.setOnClickListener {
+            val mail = binding.txtEmail.text.toString()
+            val pass = binding.txtPass.text.toString()
+            if (validateInputs(mail,pass)){
+                viewModel.cus_login(mail,pass)
+            }
+        }
+
+        binding.btnGoogle.setOnClickListener {
+            binding.bar.visibility = View.VISIBLE
+            googleSignInClient.signOut()
+            Log.e("authViewModel", "Google Sign In Button Clicked")
+            val intent = googleSignInClient.signInIntent
+            launcher.launch(intent)
+        }
+
+
     }
 
     private fun redirectToActivity(activityClass: Class<*>) {
@@ -58,4 +106,64 @@ class LogInActivity : AppCompatActivity() {
         startActivity(intent)
         finish()
     }
+
+    private fun validateInputs(email: String, password: String): Boolean {
+        var isValid = true
+
+        if (email.isEmpty()) {
+            binding.txtEmail.error = "Email is required"
+            binding.bar.visibility = View.GONE
+            isValid = false
+        }
+
+        if (password.isEmpty()) {
+            binding.txtPass.error = "Password is required"
+            binding.bar.visibility = View.GONE
+            isValid = false
+        } else if (password.length < 6) {
+            binding.txtPass.error = "Password should be at least 6 characters"
+            isValid = false
+            binding.bar.visibility = View.GONE
+        }
+
+        return isValid
+    }
+
+    private fun observeModel(){
+
+        viewModel.loginError.observe(this)
+        { error ->
+            error?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        viewModel.isLoading.observe(this)
+        { loading ->
+            // Show/hide progress bar based on `loading`
+            binding.bar.visibility = if (loading == true) View.VISIBLE else View.GONE
+        }
+
+        viewModel.toastmsg.observe(this) {
+            it?.let {
+                Toast.makeText(this, it, Toast.LENGTH_SHORT).show()
+                viewModel.clearToast()
+            }
+        }
+
+        viewModel.navigateToLogin.observe(this) {
+            if (it) {
+                startActivity(Intent(this, LogInActivity::class.java))
+                viewModel.clearNavigationLogin()
+            }
+        }
+
+        viewModel.navigateToMain.observe(this){
+            if (it) {
+                Toast.makeText(this, "main activity will open", Toast.LENGTH_SHORT).show()
+                viewModel.clearRoleLoadingMain()
+            }
+        }
+    }
+
 }

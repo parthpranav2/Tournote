@@ -18,13 +18,30 @@ class authRepository {
     val firebaseAuth = FirebaseAuth.getInstance()
     val db = Firebase.firestore
 
-    suspend fun custom_login(email: String, pass: String): Task<AuthResult?> {
-        return firebaseAuth.signInWithEmailAndPassword(email,pass)
+    suspend fun custom_login(email: String, pass: String): Result<AuthResult> {
+        return try {
+            val result = firebaseAuth.signInWithEmailAndPassword(email,pass).await()
+
+            Log.d("authRepository", "Signup success: ${result.user?.email}")
+            Result.success(result)
+        } catch (e: Exception) {
+            Log.e("authRepository", "Signup failed", e)
+            Result.failure(e)
+        }
     }
 
-    suspend fun custom_signUp(email: String, pass: String): Task<AuthResult?> {
-        return firebaseAuth.createUserWithEmailAndPassword(email,pass)
-        Log.d("error authRepository", "custom_signUp: $email $pass")
+    suspend fun custom_signUp(email: String, pass: String): Result<AuthResult> {
+        return try {
+            val result = firebaseAuth
+                .createUserWithEmailAndPassword(email, pass)
+                .await()
+
+            Log.d("authRepository", "Signup success: ${result.user?.email}")
+            Result.success(result)
+        } catch (e: Exception) {
+            Log.e("authRepository", "Signup failed", e)
+            Result.failure(e)
+        }
     }
 
     suspend fun forgot_pass(email: String): Task<Void?> {
@@ -50,8 +67,8 @@ class authRepository {
 
     suspend fun userDetailsToFirestore(userId: String, userMap: Map<String, Any>):Result<Any> {
         return try {
-            db.collection("users").document(userId).set(userMap).await()
-            Result.success("Sign up successful")
+            val result= db.collection("users").document(userId).set(userMap).await()
+            Result.success(result)
         } catch (e: Exception) {
             Log.e("authRepository", "Error saving user details: ${e.message}")
             Result.failure(e)

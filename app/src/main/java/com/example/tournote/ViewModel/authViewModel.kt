@@ -23,9 +23,6 @@ class authViewModel:ViewModel() {
     val isLoading = MutableLiveData<Boolean>()
 
 
-    private val _roleLoading = MutableLiveData<Boolean>(false)
-    val roleLoading : LiveData<Boolean> get() = _roleLoading
-
     private val _toastmsg = MutableLiveData<String?>(null)
     val toastmsg : LiveData<String?> get() = _toastmsg
 
@@ -38,6 +35,7 @@ class authViewModel:ViewModel() {
 
     fun handleSignInResult(task: Task<GoogleSignInAccount>) {
         if (task.isSuccessful) {
+            Log.e("error authViewModel", "Sign in successful")
             val account = task.result
             if (account != null) {
                 signInWithGoogle(account)
@@ -64,12 +62,12 @@ class authViewModel:ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             val result = repo.custom_login(email, pass)
-            if (result.isSuccessful){
+            if (result.isSuccess){
                 _toastmsg.value = "Login Successful"
                 isLoading.value= false
                 _navigateToMain.value = true
             }else{
-                _toastmsg.value = result.exception?.message ?: "Login failed"
+                _toastmsg.value = result.exceptionOrNull()?.message ?: "Login failed"
                 isLoading.value = false
             }
         }
@@ -79,11 +77,11 @@ class authViewModel:ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             val result = repo.custom_signUp(email, pass)
-            if (result.isSuccessful) {
+            if (result.isSuccess) {
                 user_dataTO_firebase(repo.getuser() ?: "", name, email, phone)
             } else {
                 isLoading.value = false
-                _toastmsg.value = result.exception?.message ?: "Sign Up failed"
+                _toastmsg.value = result.exceptionOrNull()?.message ?: "Sign Up failed"
             }
         }
 
@@ -105,6 +103,7 @@ class authViewModel:ViewModel() {
                     _navigateToLogin.value = true
                 } else {
                     _toastmsg.value = "Error saving user data: ${result.exceptionOrNull()?.message}"
+                    Log.d("Firebase", "Error saving user data: ${result.exceptionOrNull()?.message}")
                     isLoading.value = false
 
                 }

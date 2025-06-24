@@ -7,6 +7,7 @@
     <string name="onboardingHeading4">Relive memories, Manage expenses</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="client_id">502575591425-gc6ifuadgladmg8rn8lqe1fb1r1o1rql.apps.googleusercontent.com</string>
 
     <string-array name="country_codes">
         <item>+91 → India</item>

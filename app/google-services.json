@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "502575591425",
+    "firebase_url": "https://tournote-bca70-default-rtdb.firebaseio.com",
     "project_id": "tournote-bca70",
     "storage_bucket": "tournote-bca70.firebasestorage.app"
   },
@@ -12,7 +13,28 @@
           "package_name": "com.example.tournote"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "502575591425-fmoq9qgs1vou8cp4v15qf9onfep8ehb6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tournote",
+            "certificate_hash": "f1c802510dc1a93d5b511a1e3de4bea1ba6bc9d5"
+          }
+        },
+        {
+          "client_id": "502575591425-gc6ifuadgladmg8rn8lqe1fb1r1o1rql.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.tournote",
+            "certificate_hash": "4b71380b3c39d8103fdcaa6d21b78fed9b4392ed"
+          }
+        },
+        {
+          "client_id": "502575591425-uku77b254edri2b56baj6j28dtcfhujk.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBDoILGDAQxjzv4BoiqbqQvROPUwROJUxY"
@@ -20,7 +42,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "502575591425-uku77b254edri2b56baj6j28dtcfhujk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
