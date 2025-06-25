@@ -48,6 +48,16 @@ class authRepository {
         return firebaseAuth.sendPasswordResetEmail(email)
     }
 
+    suspend fun signOut(): Result<String> {
+        return try {
+            firebaseAuth.signOut()
+            Result.success("Signed out successfully")
+        } catch (e: Exception) {
+            Result.failure(e)
+
+        }
+    }
+
     fun getuser(): String? {
         return firebaseAuth.currentUser?.uid
     }

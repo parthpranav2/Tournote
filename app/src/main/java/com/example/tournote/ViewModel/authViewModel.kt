@@ -14,6 +14,7 @@ import com.example.tournote.Activity.LogInActivity
 import com.example.tournote.Repository.authRepository
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 class authViewModel:ViewModel() {
@@ -100,7 +101,7 @@ class authViewModel:ViewModel() {
                 if (result.isSuccess) {
                     isLoading.value = false
                     _toastmsg.value = "sign up successful"
-                    _navigateToLogin.value = true
+                    _navigateToMain.value = true
                 } else {
                     _toastmsg.value = "Error saving user data: ${result.exceptionOrNull()?.message}"
                     Log.d("Firebase", "Error saving user data: ${result.exceptionOrNull()?.message}")
@@ -139,6 +140,18 @@ class authViewModel:ViewModel() {
 
     fun clearRoleLoadingMain() {
         _navigateToMain.value = false
+    }
+
+    fun signOut() {
+        viewModelScope.launch {
+            val result = repo.signOut()
+            if (result.isSuccess){
+                _toastmsg.value = "Signed out successfully"
+                _navigateToLogin.value= true
+            } else {
+                _toastmsg.value = result.exceptionOrNull()?.message ?: "Sign out failed"
+            }
+        }
     }
 
 

@@ -12,6 +12,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.tournote.GroupSelectorActivity
 import com.example.tournote.R
 import com.example.tournote.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivityLogInBinding
@@ -160,7 +161,9 @@ class LogInActivity : AppCompatActivity() {
 
         viewModel.navigateToMain.observe(this){
             if (it) {
-                Toast.makeText(this, "main activity will open", Toast.LENGTH_SHORT).show()
+                val intent = Intent(this, GroupSelectorActivity::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
                 viewModel.clearRoleLoadingMain()
             }
         }
