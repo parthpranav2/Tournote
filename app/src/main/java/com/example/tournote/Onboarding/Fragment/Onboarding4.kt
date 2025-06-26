@@ -1,4 +1,4 @@
-package com.example.tournote.Fragment
+package com.example.tournote.Onboarding.Fragment
 
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -13,7 +13,7 @@ private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
 
 /**
- * A simple [androidx.fragment.app.Fragment] subclass.
+ * A simple [Fragment] subclass.
  * Use the [Onboarding4.newInstance] factory method to
  * create an instance of this fragment.
  */

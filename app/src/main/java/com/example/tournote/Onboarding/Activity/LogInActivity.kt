@@ -1,4 +1,4 @@
-package com.example.tournote.Activity
+package com.example.tournote.Onboarding.Activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -12,9 +12,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.tournote.GroupSelectorActivity
+import com.example.tournote.Functionalities.Activity.MainActivity
 import com.example.tournote.R
-import com.example.tournote.ViewModel.authViewModel
+import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivityLogInBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
@@ -92,7 +92,7 @@ class LogInActivity : AppCompatActivity() {
         }
 
         binding.btnGoogle.setOnClickListener {
-            binding.bar.visibility = View.VISIBLE
+            binding.progressBar.visibility = View.VISIBLE
             googleSignInClient.signOut()
             Log.e("authViewModel", "Google Sign In Button Clicked")
             val intent = googleSignInClient.signInIntent
@@ -113,18 +113,18 @@ class LogInActivity : AppCompatActivity() {
 
         if (email.isEmpty()) {
             binding.txtEmail.error = "Email is required"
-            binding.bar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             isValid = false
         }
 
         if (password.isEmpty()) {
             binding.txtPass.error = "Password is required"
-            binding.bar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
             isValid = false
         } else if (password.length < 6) {
             binding.txtPass.error = "Password should be at least 6 characters"
             isValid = false
-            binding.bar.visibility = View.GONE
+            binding.progressBar.visibility = View.GONE
         }
 
         return isValid
@@ -142,7 +142,7 @@ class LogInActivity : AppCompatActivity() {
         viewModel.isLoading.observe(this)
         { loading ->
             // Show/hide progress bar based on `loading`
-            binding.bar.visibility = if (loading == true) View.VISIBLE else View.GONE
+            binding.progressBar.visibility = if (loading == true) View.VISIBLE else View.GONE
         }
 
         viewModel.toastmsg.observe(this) {
@@ -161,7 +161,7 @@ class LogInActivity : AppCompatActivity() {
 
         viewModel.navigateToMain.observe(this){
             if (it) {
-                val intent = Intent(this, GroupSelectorActivity::class.java)
+                val intent = Intent(this, MainActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 viewModel.clearRoleLoadingMain()

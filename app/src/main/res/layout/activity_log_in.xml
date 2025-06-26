@@ -6,10 +6,10 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Activity.LogInActivity"
+    tools:context=".Onboarding.Activity.LogInActivity"
     android:background="@color/green_theme_Light">
     <ProgressBar
-        android:id="@+id/bar"
+        android:id="@+id/progressBar"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_centerInParent="true"

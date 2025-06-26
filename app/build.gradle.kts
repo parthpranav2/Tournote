@@ -1,7 +1,6 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-
     id("com.google.gms.google-services")
 }
 
@@ -40,6 +39,11 @@ android {
     }
 }
 
+// Add the googleServices block here to explicitly handle multiple google-services.json files
+googleServices{
+    disableVersionCheck=true
+}
+
 dependencies {
 
     implementation(libs.androidx.core.ktx)
@@ -52,6 +56,7 @@ dependencies {
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
     implementation(libs.firebase.firestore)
+    implementation(libs.firebase.database.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -63,4 +68,15 @@ dependencies {
     implementation ("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
     implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0")
+    implementation("androidx.fragment:fragment-ktx:1.6.2")
+
+    //cloudinary
+    implementation("com.google.android.gms:play-services-cast-tv:21.0.1")
+
+    implementation("com.cloudinary:cloudinary-android:3.0.2")
+    implementation("com.cloudinary:cloudinary-android-ui:3.0.2")
+    implementation("com.cloudinary:cloudinary-android-preprocess:3.0.2")
+    implementation("com.cloudinary:cloudinary-android-download:3.0.2")
+    implementation("com.cloudinary:cloudinary-android-core:3.0.2") // This one might be implicitly pulled by cloudinary-android, but explicit is fine if you need it.
+
 }

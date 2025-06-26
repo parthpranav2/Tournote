@@ -1,4 +1,4 @@
-package com.example.tournote.Activity
+package com.example.tournote.Onboarding.Activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -8,9 +8,9 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.tournote.GroupSelectorActivity
+import com.example.tournote.Functionalities.Activity.MainActivity
 import com.example.tournote.R
-import com.example.tournote.ViewModel.authViewModel
+import com.example.tournote.Onboarding.ViewModel.authViewModel
 
 class CustomSplashScreen : AppCompatActivity() {
     private val viewModel : authViewModel by viewModels()
@@ -25,11 +25,12 @@ class CustomSplashScreen : AppCompatActivity() {
         }
 
         if (viewModel.repo.getuser()!=null){
-            redirectToActivity(GroupSelectorActivity::class.java)
+            redirectToActivity(MainActivity::class.java)
         } else {
             // If user is not logged in, redirect to GettingStartedActivity
             redirectToActivity(GettingStartedActivity::class.java)
         }
+
     }
 
 
@@ -40,4 +41,7 @@ class CustomSplashScreen : AppCompatActivity() {
             finish() // Close MainActivity
         }, 2000)
     }
+
+
+
 }

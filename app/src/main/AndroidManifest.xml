@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 <uses-permission android:name="android.permission.INTERNET"/>
     <application
+        android:name=".ApplicationClass"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,22 +14,22 @@
         android:theme="@style/Theme.Tournote"
         tools:targetApi="31">
         <activity
-            android:name=".GroupSelectorActivity"
+            android:name=".Functionalities.Activity.MainActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.LogInActivity"
+            android:name=".Onboarding.Activity.LogInActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.SignUpActivity"
+            android:name=".Onboarding.Activity.SignUpActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.OnboardingActivity"
+            android:name=".Onboarding.Activity.OnboardingActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.GettingStartedActivity"
+            android:name=".Onboarding.Activity.GettingStartedActivity"
             android:exported="false" />
         <activity
-            android:name=".Activity.CustomSplashScreen"
+            android:name=".Onboarding.Activity.CustomSplashScreen"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

@@ -1,4 +1,4 @@
-package com.example.tournote.Activity
+package com.example.tournote.Onboarding.Activity
 
 import android.content.Intent
 import android.os.Bundle

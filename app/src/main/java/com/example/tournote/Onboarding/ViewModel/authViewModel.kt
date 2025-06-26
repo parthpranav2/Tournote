@@ -1,23 +1,22 @@
-package com.example.tournote.ViewModel
+package com.example.tournote.Onboarding.ViewModel
 
 import android.content.Context
-import android.content.Intent
+import android.net.Uri
 import android.util.Log
-import android.widget.Toast
-import androidx.core.content.ContextCompat.startActivity
-import androidx.core.os.bundleOf
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tournote.Activity.LogInActivity
-import com.example.tournote.Repository.authRepository
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
+import com.example.tournote.Onboarding.Repository.authRepository
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
+import java.io.File
 
-class authViewModel:ViewModel() {
+class authViewModel: ViewModel() {
 
     val repo = authRepository()
     val loginError = MutableLiveData<String?>()
@@ -53,7 +52,7 @@ class authViewModel:ViewModel() {
             isLoading.value = true
             val result = repo.firebaseLoginWithGoogle(account)
             if (result != null) {
-                user_dataTO_firebase(result.uid, result.displayName ?: "", result.email ?: "", " ")
+                user_dataTO_firebase(result.uid, result.displayName ?: "", result.email ?: "", " ","null")
             } else {
                 loginError.value = "Login failed."
             }
@@ -74,12 +73,12 @@ class authViewModel:ViewModel() {
         }
     }
 
-    fun cus_signup (email:String,pass: String,name: String, phone: String){
+    fun cus_signup (email:String,pass: String,name: String, phone: String, profilePicUrl: String){
         viewModelScope.launch {
             isLoading.value = true
             val result = repo.custom_signUp(email, pass)
             if (result.isSuccess) {
-                user_dataTO_firebase(repo.getuser() ?: "", name, email, phone)
+                user_dataTO_firebase(repo.getuser() ?: "", name, email, phone, profilePicUrl)
             } else {
                 isLoading.value = false
                 _toastmsg.value = result.exceptionOrNull()?.message ?: "Sign Up failed"
@@ -88,13 +87,14 @@ class authViewModel:ViewModel() {
 
     }
 
-    fun user_dataTO_firebase(userId: String, name: String, email: String, phone: String) {
+    fun user_dataTO_firebase(userId: String, name: String, email: String, phone: String,profilePicUrl:String) {
         viewModelScope.launch {
             try {
                 val userMap = hashMapOf(
                     "name" to name,
                     "email" to email,
                     "phone" to phone,
+                    "profilePic" to profilePicUrl,
                     "createdAt" to System.currentTimeMillis()
                 )
                 val result = repo.userDetailsToFirestore(userId, userMap)
@@ -154,6 +154,66 @@ class authViewModel:ViewModel() {
         }
     }
 
+
+    private val _imageUrl = MutableLiveData<String?>()
+    val imageUrl: LiveData<String?> get() = _imageUrl
+
+    fun uploadImageToCloudinary(uri: Uri, context: Context) {
+        viewModelScope.launch {
+            try {
+                val file = getFileFromUri(uri, context)
+
+                val uploadOptions = hashMapOf<String, Any>(
+                    "public_id" to "user_${System.currentTimeMillis()}",
+                    "folder" to "android_uploads",
+                    "resource_type" to "image"
+                )
+
+                MediaManager.get()
+                    .upload(file.absolutePath)
+                    .options(uploadOptions)
+                    .callback(object : UploadCallback {
+                        override fun onStart(requestId: String?) {
+                            isLoading.postValue(true)
+                        }
+
+                        override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {
+                            // optional progress updates
+                        }
+
+                        override fun onSuccess(requestId: String?, resultData: Map<*, *>?) {
+                            val url = resultData?.get("secure_url") as? String
+                            _imageUrl.postValue(url)
+                            isLoading.postValue(false)
+                        }
+
+                        override fun onError(requestId: String?, error: ErrorInfo?) {
+                            _toastmsg.postValue("Upload Failed: ${error?.description}")
+                            isLoading.postValue(false)
+                        }
+
+                        override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+                            // not needed here
+                        }
+                    })
+                    .dispatch()
+            } catch (e: Exception) {
+                _toastmsg.postValue("Exception: ${e.message}")
+                isLoading.postValue(false)
+            }
+        }
+    }
+
+    private fun getFileFromUri(uri: Uri, context: Context): File {
+        val inputStream = context.contentResolver.openInputStream(uri)
+        val file = File.createTempFile("upload_", ".jpg", context.cacheDir)
+        inputStream?.use { input ->
+            file.outputStream().use { output ->
+                input.copyTo(output)
+            }
+        }
+        return file
+    }
 
 
 
