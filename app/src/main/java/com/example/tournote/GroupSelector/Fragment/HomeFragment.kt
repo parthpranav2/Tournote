@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.tournote.GroupSelector.Adapter.FetchIncludedGroupDetailsRecyclerViewAdapter
 import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.databinding.FragmentHomeBinding
 

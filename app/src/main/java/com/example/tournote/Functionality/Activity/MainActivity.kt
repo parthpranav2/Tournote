@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
+import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
 import com.example.tournote.R
