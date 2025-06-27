@@ -66,11 +66,8 @@ class CreateGroupFragment : Fragment() {
                 resetUI()
             }
         }
-
         binding.btnCreateGrp.setOnClickListener {
-            viewModel.fetchGroupDetails()
             if (binding.txtGroupName.text.isNullOrEmpty()) {
-                binding.txtGroupNameAlert.visibility = View.VISIBLE
             } else {
                 val groupName = binding.txtGroupName.text.toString()
                 val groupDescription = binding.txtGroupDescription.text.toString()
@@ -142,7 +139,6 @@ class CreateGroupFragment : Fragment() {
         binding.txtGroupDescription.text?.clear()
 
         // Reset error visibility
-        binding.txtGroupNameAlert.visibility = View.GONE
 
         // Reset selected image
         selectedImageUri = null
