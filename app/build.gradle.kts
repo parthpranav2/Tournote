@@ -79,4 +79,7 @@ dependencies {
     implementation("com.cloudinary:cloudinary-android-download:3.0.2")
     implementation("com.cloudinary:cloudinary-android-core:3.0.2") // This one might be implicitly pulled by cloudinary-android, but explicit is fine if you need it.
 
+    //glide
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
 }

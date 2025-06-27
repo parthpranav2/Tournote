@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.example.tournote.GlobalClass
 import com.example.tournote.Onboarding.Repository.authRepository
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
@@ -52,6 +53,8 @@ class authViewModel: ViewModel() {
             isLoading.value = true
             val result = repo.firebaseLoginWithGoogle(account)
             if (result != null) {
+                //GlobalClass.uid=result.uid
+                GlobalClass.Email=result.email
                 user_dataTO_firebase(result.uid, result.displayName ?: "", result.email ?: "", " ","null")
             } else {
                 loginError.value = "Login failed."
@@ -63,6 +66,7 @@ class authViewModel: ViewModel() {
             isLoading.value = true
             val result = repo.custom_login(email, pass)
             if (result.isSuccess){
+                GlobalClass.Email=email
                 _toastmsg.value = "Login Successful"
                 isLoading.value= false
                 _navigateToMain.value = true
@@ -100,6 +104,7 @@ class authViewModel: ViewModel() {
                 val result = repo.userDetailsToFirestore(userId, userMap)
                 if (result.isSuccess) {
                     isLoading.value = false
+                    GlobalClass.Email=email
                     _toastmsg.value = "sign up successful"
                     _navigateToMain.value = true
                 } else {

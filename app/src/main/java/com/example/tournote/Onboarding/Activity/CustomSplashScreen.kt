@@ -8,7 +8,8 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.tournote.Functionalities.Activity.MainActivity
+import com.example.tournote.GlobalClass
+import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 
@@ -25,7 +26,8 @@ class CustomSplashScreen : AppCompatActivity() {
         }
 
         if (viewModel.repo.getuser()!=null){
-            redirectToActivity(MainActivity::class.java)
+            GlobalClass.Email=viewModel.repo.getuser()
+            redirectToActivity(GroupSelectorActivity::class.java)
         } else {
             // If user is not logged in, redirect to GettingStartedActivity
             redirectToActivity(GettingStartedActivity::class.java)

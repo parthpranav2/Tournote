@@ -12,7 +12,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.tournote.Functionalities.Activity.MainActivity
+import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivityLogInBinding
@@ -161,7 +161,7 @@ class LogInActivity : AppCompatActivity() {
 
         viewModel.navigateToMain.observe(this){
             if (it) {
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, GroupSelectorActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 viewModel.clearRoleLoadingMain()

@@ -1,13 +1,13 @@
-package com.example.tournote.Functionalities.Adapter
+package com.example.tournote.GroupSelector.Adapter
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.tournote.Functionalities.Fragment.CreateGroupFragment
-import com.example.tournote.Functionalities.Fragment.HomeFragment
-import com.example.tournote.Functionalities.Fragment.ProfileFragment
+import com.example.tournote.GroupSelector.Fragment.CreateGroupFragment
+import com.example.tournote.GroupSelector.Fragment.HomeFragment
+import com.example.tournote.GroupSelector.Fragment.ProfileFragment
 
-class MainActivityPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity){
+class GroupSelectorActivityPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity){
     override fun getItemCount(): Int = 3
 
     override fun createFragment(position: Int): Fragment {

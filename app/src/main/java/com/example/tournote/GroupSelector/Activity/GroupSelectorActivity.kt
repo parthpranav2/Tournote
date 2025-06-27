@@ -1,4 +1,4 @@
-package com.example.tournote.Functionalities.Activity
+package com.example.tournote.GroupSelector.Activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,29 +10,30 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
-import com.example.tournote.Functionalities.Adapter.MainActivityPagerAdapter
-import com.example.tournote.Functionalities.ViewModel.MainActivityViewModel
+import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
+import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.Onboarding.Activity.LogInActivity
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.R
-import com.example.tournote.databinding.ActivityMainBinding
+import com.example.tournote.databinding.ActivityGroupSelectorBinding
 
-class MainActivity : AppCompatActivity() {
+
+class GroupSelectorActivity : AppCompatActivity() {
     private val viewModel: authViewModel by viewModels()
-    private lateinit var binding: ActivityMainBinding
+    private lateinit var binding: ActivityGroupSelectorBinding
     private lateinit var viewPager : ViewPager2
 
-    private val viewModel2 : MainActivityViewModel by viewModels()
+    private val viewModel2 : GroupSelectorActivityViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        binding = ActivityMainBinding.inflate(layoutInflater)
+        binding = ActivityGroupSelectorBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         viewPager=binding.viewPager
-        viewPager.adapter= MainActivityPagerAdapter(this)
+        viewPager.adapter= GroupSelectorActivityPagerAdapter(this)
         viewPager.currentItem=0
 
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main)) { v, insets ->
@@ -76,20 +77,17 @@ class MainActivity : AppCompatActivity() {
         })
 
         binding.btnAddGrp.setOnClickListener {
-            viewModel2.navToHomeSwitch()
-            viewPager.currentItem=1
+            viewPager.setCurrentItem(1, false)
         }
         binding.btnHome.setOnClickListener {
-            viewPager.currentItem=0
+            viewPager.setCurrentItem(0, false)
         }
         binding.btnAcc.setOnClickListener {
-            viewPager.currentItem=2
+            viewPager.setCurrentItem(2, false)
         }
         /*binding.signOutButton.setOnClickListener {
             viewModel.signOut()
         }*/
-
-
 
 
     }
@@ -134,7 +132,7 @@ class MainActivity : AppCompatActivity() {
 
         viewModel.navigateToMain.observe(this){
             if (it) {
-                val intent = Intent(this, MainActivity::class.java)
+                val intent = Intent(this, GroupSelectorActivity::class.java)
                 intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
                 viewModel.clearRoleLoadingMain()
