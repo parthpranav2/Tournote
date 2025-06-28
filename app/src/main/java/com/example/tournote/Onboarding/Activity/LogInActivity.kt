@@ -150,9 +150,15 @@ class LogInActivity : AppCompatActivity() {
                 val name = user.displayName ?: ""
                 val userId = user.uid
                 CoroutineScope(Dispatchers.Main).launch {
-                    if (viewModel.repo.userDetailGetLogin(userId) == null) {
+                    val snapshot = viewModel.repo.userDetailGetLogin(userId)
+                    if (snapshot == null) {
+                        // Network error or permission issue
+                        Toast.makeText(this@LogInActivity, "Network error or permission issue", Toast.LENGTH_SHORT).show()
+                    } else if (!snapshot.exists()) {
+                        // User does not exist
                         phone_Dialog(name, email, userId)
                     } else {
+                        // User exists, proceed
                         viewModel.isLoading.value = false
                         Toast.makeText(this@LogInActivity, "Login successful", Toast.LENGTH_SHORT)
                             .show()
@@ -161,7 +167,6 @@ class LogInActivity : AppCompatActivity() {
                             Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                         startActivity(intent)
                         finish()
-
                     }
                 }
             }
