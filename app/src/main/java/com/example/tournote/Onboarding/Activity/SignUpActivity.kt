@@ -21,6 +21,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
+import com.example.tournote.Onboarding.Activity.LogInActivity
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivitySignUpBinding
@@ -28,6 +29,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class SignUpActivity : AppCompatActivity() {
 
@@ -238,7 +242,19 @@ class SignUpActivity : AppCompatActivity() {
                 val email = user.email ?: ""
                 val name = user.displayName ?: ""
                 val userId = user.uid
-                phone_Dialog(name, email, userId)
+                CoroutineScope(Dispatchers.Main).launch {
+                    val snapshot = viewModel.repo.userDetailGetLogin(userId)
+                    if (snapshot == null) {
+                        // Network error or permission issue
+                        Toast.makeText(this@SignUpActivity, "Network error or permission issue", Toast.LENGTH_SHORT).show()
+                    } else if (!snapshot.exists()) {
+                        // User does not exist
+                        phone_Dialog(name, email, userId)
+                    } else {
+                        // User exists, proceed
+                        Toast.makeText(this@SignUpActivity, "User already exists", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         }
         viewModel.loginError.observe(this) { error ->
