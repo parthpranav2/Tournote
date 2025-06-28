@@ -5,6 +5,13 @@ import android.os.Bundle
 import android.text.InputType
 import android.util.Log
 import android.view.View
+import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.RelativeLayout
+import android.widget.Spinner
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,13 +26,17 @@ import com.example.tournote.databinding.ActivityLogInBinding
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.material.bottomsheet.BottomSheetDialog
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 
 class LogInActivity : AppCompatActivity() {
     private var isPasswordVisible = false
 
     private lateinit var binding: ActivityLogInBinding
-
+    private lateinit var phone_dialog : BottomSheetDialog
 
     private lateinit var googleSignInClient: GoogleSignInClient
 
@@ -132,6 +143,31 @@ class LogInActivity : AppCompatActivity() {
 
     private fun observeModel(){
 
+        viewModel.googleResponse.observe(this) { user ->
+            if (user != null) {
+                Log.e("error SignUpActivity", "Google Sign In successful: ${user.email}")
+                val email = user.email ?: ""
+                val name = user.displayName ?: ""
+                val userId = user.uid
+                CoroutineScope(Dispatchers.Main).launch {
+                    if (viewModel.repo.userDetailGetLogin(userId) == null) {
+                        phone_Dialog(name, email, userId)
+                    } else {
+                        viewModel.isLoading.value = false
+                        Toast.makeText(this@LogInActivity, "Login successful", Toast.LENGTH_SHORT)
+                            .show()
+                        val intent = Intent(this@LogInActivity, GroupSelectorActivity::class.java)
+                        intent.flags =
+                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+
+                    }
+                }
+            }
+        }
+
+
         viewModel.loginError.observe(this)
         { error ->
             error?.let {
@@ -154,19 +190,88 @@ class LogInActivity : AppCompatActivity() {
 
         viewModel.navigateToLogin.observe(this) {
             if (it) {
-                startActivity(Intent(this, LogInActivity::class.java))
+                val intent = Intent(this, LogInActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
                 viewModel.clearNavigationLogin()
             }
         }
 
-        viewModel.navigateToMain.observe(this){
-            if (it) {
+        viewModel.navigateToMain.observe(this) { shouldNavigate ->
+            if (shouldNavigate) {
                 val intent = Intent(this, GroupSelectorActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                 startActivity(intent)
+                finish() // 👈 kills the hosting activity so it's not in the back stack
                 viewModel.clearRoleLoadingMain()
             }
         }
+
+    }
+    fun phone_Dialog(name: String, email: String, userId: String?) {
+        phone_dialog = BottomSheetDialog(this)
+        phone_dialog.setContentView(R.layout.phone_bottom_sheet)
+        phone_dialog.setCanceledOnTouchOutside(true)
+        phone_dialog.setCancelable(true)
+        phone_dialog.show()
+
+        var code : String?= null
+
+        val spinner = phone_dialog.findViewById<Spinner>(R.id.cmbcountrycode)
+        val countryCodes = resources.getStringArray(R.array.country_codes)
+        val adapter = object : ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, countryCodes) {
+            override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+                val view = super.getView(position, convertView, parent)
+                val codeOnly = getItem(position)?.split(" →")?.get(0) ?: ""
+                (view as TextView).text = codeOnly
+                return view
+            }
+        }
+        spinner?.adapter = adapter
+        phone_dialog.setOnCancelListener {
+            viewModel.isLoading.value = false
+        }
+
+        spinner?.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>,
+                view: View,
+                position: Int,
+                id: Long
+            ) {
+                val selectedItem = parent.getItemAtPosition(position).toString()
+                val selectedCode = selectedItem.split(" →")[0].trim()
+                code = selectedCode
+                Log.d("Spinner", "User selected: $selectedItem | Code: $selectedCode")
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                Log.d("Spinner", "Nothing selected")
+                code = null
+            }
+        }
+
+        val phoneNumber = phone_dialog.findViewById<EditText>(R.id.txtPhone)
+
+        phone_dialog.findViewById<RelativeLayout>(R.id.btnCnfrm)?.setOnClickListener {
+            val phone = phoneNumber?.text.toString().trim()
+
+            if (phone.isEmpty()) {
+                phoneNumber?.error = "Phone number is required"
+            } else if (phone.length != 10) {
+                phoneNumber?.error = "Phone number must be exactly 10 digits"
+            } else if (code == null || code == "Select country") {
+                Toast.makeText(this, "Please select a country code.", Toast.LENGTH_SHORT).show()
+            } else {
+                    val fullPhone = "$code$phone"
+                    viewModel.user_dataTO_firebase(userId!!, name, email, fullPhone, "null")
+            }
+
+        }
+
+
+
     }
 
 }

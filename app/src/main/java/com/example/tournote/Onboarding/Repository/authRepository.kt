@@ -10,6 +10,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
@@ -88,6 +89,16 @@ class authRepository {
             Log.e("authRepository", "Error saving user details: ${e.message}")
             Result.failure(e)
         }
+    }
+
+    suspend fun userDetailGetLogin(userId: String): DocumentSnapshot? {
+        try {
+            val data = db.collection("users").document(userId).get().await()
+            return data
+        }catch (e: Exception) {
+            return null
+        }
+
     }
 
 

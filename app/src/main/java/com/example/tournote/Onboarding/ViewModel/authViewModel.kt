@@ -14,6 +14,7 @@ import com.example.tournote.GlobalClass
 import com.example.tournote.Onboarding.Repository.authRepository
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -32,6 +33,10 @@ class authViewModel: ViewModel() {
 
     private val _navigateToMain = MutableLiveData<Boolean>(false)
     val navigateToMain: LiveData<Boolean> = _navigateToMain
+
+    private val _googleResponse = MutableLiveData<FirebaseUser?>(null)
+    val googleResponse: LiveData<FirebaseUser?> get() = _googleResponse
+
 
 
     fun handleSignInResult(task: Task<GoogleSignInAccount>) {
@@ -55,8 +60,9 @@ class authViewModel: ViewModel() {
             if (result != null) {
                 //GlobalClass.uid=result.uid
                 GlobalClass.Email=result.email
-                user_dataTO_firebase(result.uid, result.displayName ?: "", result.email ?: "", " ","null")
+                _googleResponse.value = result
             } else {
+                _googleResponse.value = null
                 loginError.value = "Login failed."
             }
         }
