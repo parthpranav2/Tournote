@@ -94,12 +94,14 @@ class GroupSelectorActivity : AppCompatActivity() {
 
 
     private fun observeModel(){
-        viewModel2.navigateToHome.observe(this){status->
-            if(status){
-                binding.bottomButtons.visibility= View.VISIBLE
-                viewPager.currentItem=0
+        viewModel2.navigateToHome.observe(this) { status ->
+            if (status) {
+                binding.bottomButtons.visibility = View.VISIBLE
+                viewPager.currentItem = 0
+                viewModel2.fetchGroupDetails() // 🛠 Force refresh when returning to HomeFragment
             }
         }
+
 
         viewModel.loginError.observe(this)
         { error ->
