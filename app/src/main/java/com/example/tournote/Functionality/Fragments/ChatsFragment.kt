@@ -1,60 +1,228 @@
 package com.example.tournote.Functionality.Fragments
 
+import android.R.attr.clipToPadding
 import android.os.Bundle
+import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.Toast
+import android.widget.Toolbar
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.tournote.Functionality.Adapter.ChatAdapter
+import com.example.tournote.Functionality.ViewModel.ChatViewModel
+import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
+import com.example.tournote.Functionality.data.ChatMessage
+import com.example.tournote.GlobalClass
+import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.R
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import java.util.UUID
+import kotlin.text.clear
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [ChatsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class ChatsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private val mainViewModel: MainActivityViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels()
+    lateinit var recyclerViewChat : RecyclerView
+    lateinit var chatAdapter : ChatAdapter
+    lateinit var toolbar: LinearLayout
+    private val authViewmodel: authViewModel by viewModels()
+    lateinit var editTextMessage: EditText
+    lateinit var buttonSend : FloatingActionButton
+    private var grp_id: String? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_chats, container, false)
-    }
+        val view = inflater.inflate(R.layout.fragment_chats, container, false)
+        val group_logo = view.findViewById<android.widget.ImageView>(R.id.grp_logo)
+        val group_name = view.findViewById<android.widget.TextView>(R.id.grp_name)
+        recyclerViewChat = view.findViewById<RecyclerView>(R.id.recyclerViewChat)
+        editTextMessage = view.findViewById<EditText>(R.id.editTextMessage)
+        buttonSend = view.findViewById<FloatingActionButton>(R.id.buttonSend)
+        toolbar = view.findViewById<LinearLayout>(R.id.toolbar)
+        chatAdapter = ChatAdapter(requireContext())
+        mainViewModel.loadGroup(GlobalClass.group_id?:"")
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment ChatsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            ChatsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+        mainViewModel.groupInfo.observe(viewLifecycleOwner) {
+            it.onSuccess {
+                group_name.text = it.name ?: "Unknown Group"
+                if (it.profilePic == "null" || it.profilePic.isNullOrBlank()) {
+                    group_logo.setImageResource(R.drawable.defaultgroupimage)
+                } else {
+                    // Load the image using Glide or any other image loading library
+                    com.bumptech.glide.Glide.with(requireContext())
+                        .load(it.profilePic)
+                        .placeholder(R.drawable.defaultgroupimage)
+                        .error(R.drawable.defaultgroupimage)
+                        .into(group_logo)
                 }
             }
+            it.onFailure {
+                group_name.text = "Error loading group name"
+                group_logo.setImageResource(R.drawable.defaultgroupimage)
+            }
+        }
+
+        recyclerViewChat.adapter =chatAdapter
+        recyclerViewChat.layoutManager = LinearLayoutManager(requireContext()).apply {
+            stackFromEnd = true
+        }
+
+        chatViewModel.getAllMsgFromDB(GlobalClass.group_id?:"",requireContext())
+        chatViewModel.messages.observe(viewLifecycleOwner) { messages ->
+            val updated_msg = processMessages(messages)
+            Log.d("ChatDebug","lets see:${messages}")
+            chatAdapter.submitList(updated_msg) {
+                recyclerViewChat.scrollToPosition(messages.size - 1)
+            }
+        }
+
+        setupRecyclerView()
+        setupClickListeners()
+        observeViewModel()
+        chatViewModel.listenMsg()
+
+        return view
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        val toolbar = view.findViewById<View>(R.id.toolbar)
+        val rootLayout = view.findViewById<View>(R.id.rootLayout)
+
+        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
+            val topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+            toolbar.setPadding(
+                toolbar.paddingLeft,
+                12,
+                toolbar.paddingRight,
+                toolbar.paddingBottom
+            )
+            insets
+        }
+    }
+
+
+
+
+    private fun setupRecyclerView() {
+//        recyclerViewChat.apply {
+//            chatAdapter = ChatAdapter()
+//            adapter = chatAdapter
+//            layoutManager = LinearLayoutManager(requireContext()).apply {
+//                stackFromEnd = true
+//            }
+//            clipToPadding = false
+//        }
+
+
+    }
+
+    private fun processMessages(messages: List<ChatMessage>): List<ChatMessage> {
+        val userID = authViewmodel.repo.getUid()
+        for (message in messages) {
+            if (message.user_id == userID) {
+                message.isUser = true  // update field
+            }else{
+                message.isUser = false
+            }
+        }
+        return messages
+    }
+
+    private fun setupClickListeners() {
+        buttonSend.setOnClickListener {
+            sendMsgTOView()
+        }
+            editTextMessage.setOnEditorActionListener { _, actionId, _ ->
+            // use when user presses "Send" on keyboard
+            if (actionId == EditorInfo.IME_ACTION_SEND) {
+                sendMsgTOView()
+                true
+            } else false
+        }
+
+        // Handle focus changes to scroll to bottom
+        editTextMessage.setOnFocusChangeListener { _, hasFocus ->
+            if (hasFocus && ::chatAdapter.isInitialized && chatAdapter.itemCount > 0) {
+                recyclerViewChat.post {
+                    recyclerViewChat.scrollToPosition(chatAdapter.itemCount - 1)
+                }
+            }
+        }
+    }
+
+    private fun observeViewModel() {
+
+        mainViewModel.groupId.observe(viewLifecycleOwner) {
+            grp_id = it
+        }
+
+        chatViewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+            buttonSend.isEnabled = !isLoading
+        }
+
+        chatViewModel.error.observe(viewLifecycleOwner) { error ->
+            error?.let {
+                Toast.makeText(requireContext(), "Error: $error", Toast.LENGTH_SHORT).show()
+                chatViewModel.clearError()
+            }
+        }
+    }
+    fun generateShortMessageId(): String {
+        return UUID.randomUUID().toString().take(8)
+    }
+
+
+
+    fun sendMsgTOView(){
+
+        val msg_content = editTextMessage.text.toString()
+
+        if (msg_content.trim().isNotEmpty()) {
+
+            CoroutineScope(Dispatchers.Main).launch {
+                val userID = authViewmodel.repo.getUid()
+                if (userID != null) {
+                    val user_data = authViewmodel.repo.userDetailGetLogin(userID)
+                    if (user_data != null && GlobalClass.group_id != null) {
+                        val user_name = user_data.get("name").toString()
+                        val profile_url: String? = user_data.get("profilePic").toString()
+                        val group_id = GlobalClass.group_id
+                        val msg_id = generateShortMessageId()
+                        val msg = ChatMessage(
+                            msg_content, user_name, group_id, userID, profile_pic = profile_url, message_id = msg_id,isUser = true
+                        )
+                        chatViewModel.sendMsg(msg)
+                    }else{
+                        Toast.makeText(requireContext(), "User data not found", Toast.LENGTH_SHORT).show()
+                    }
+                }else{
+                    Toast.makeText(requireContext(), "UserID not found", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            editTextMessage.text?.clear()
+
+        }
+
+    }
+
 }

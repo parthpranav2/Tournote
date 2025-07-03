@@ -1,24 +1,35 @@
 package com.example.tournote.Functionality.Activity
 
 import android.content.Intent
+import android.graphics.Rect
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
 import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
+import com.example.tournote.Functionality.SocketManager
+import com.example.tournote.Functionality.ViewModel.ChatViewModel
+import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
+import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
 import com.example.tournote.R
 import com.example.tournote.databinding.ActivityGroupSelectorBinding
 import com.example.tournote.databinding.ActivityMainBinding
+import com.google.firebase.logger.Logger
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewPager: ViewPager2
+    private val viewModel: MainActivityViewModel by viewModels()
+    private val chatViewModel: ChatViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -26,6 +37,8 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val groupId = intent.getStringExtra("GROUP_ID")
+        GlobalClass.group_id = groupId
+
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -33,6 +46,8 @@ class MainActivity : AppCompatActivity() {
         viewPager=binding.viewPager
         viewPager.adapter= FunctionalityPagerAdapter(this)
         viewPager.currentItem=0
+
+        handleKeyboardVisibility()
 
         binding.viewPager.setPageTransformer(null)
         binding.viewPager.isUserInputEnabled=false
@@ -152,6 +167,34 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, activityClass)
         startActivity(intent)
         finish()
+    }
+
+    private fun handleKeyboardVisibility() {
+        val rootView = findViewById<View>(R.id.main)
+        val bottomNav = findViewById<View>(R.id.bottomButtons)
+
+        rootView.viewTreeObserver.addOnGlobalLayoutListener {
+            val rect = Rect()
+            rootView.getWindowVisibleDisplayFrame(rect)
+
+            val screenHeight = rootView.rootView.height
+            val keypadHeight = screenHeight - rect.bottom
+
+            if (keypadHeight > screenHeight * 0.15) {
+                // Keyboard is open
+                bottomNav.visibility = View.GONE
+            } else {
+                // Keyboard is closed
+                bottomNav.visibility = View.VISIBLE
+            }
+        }
+    }
+
+
+    override fun onStop() {
+        super.onStop()
+        Log.d("ChatDebug","socket disconnected")
+        SocketManager.disconnect()
     }
 
 }

@@ -9,5 +9,6 @@
     <color name="bluetext">#B5E2FA</color>
 
     <color name="darkBluetext">#0FA3B1</color>
+    <color name="text_primary">#E0E0E0</color>
 
 </resources>

@@ -88,7 +88,7 @@ class authViewModel: ViewModel() {
             isLoading.value = true
             val result = repo.custom_signUp(email, pass)
             if (result.isSuccess) {
-                user_dataTO_firebase(repo.getuser() ?: "", name, email, phone, profilePicUrl)
+                user_dataTO_firebase(repo.getUid() ?: "", name, email, phone, profilePicUrl)
             } else {
                 isLoading.value = false
                 _toastmsg.value = result.exceptionOrNull()?.message ?: "Sign Up failed"
