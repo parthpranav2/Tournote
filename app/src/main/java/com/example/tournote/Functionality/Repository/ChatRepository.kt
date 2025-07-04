@@ -1,9 +1,11 @@
 package com.example.tournote.Functionality.Repository
 
+import android.util.Log
 import com.example.tournote.Functionality.APIClient
 import com.example.tournote.Functionality.SocketManager
 import com.example.tournote.Functionality.data.ChatMessage
 import io.socket.client.Ack
+import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import org.json.JSONObject
 import retrofit2.Call
@@ -12,8 +14,16 @@ import retrofit2.Response
 class ChatRepository {
 
 
-    fun connectSocket(){
+    fun connectSocket(groupId: String){
         SocketManager.connect()
+        SocketManager.on(Socket.EVENT_CONNECT) {
+            Log.d("Socket", "🎉 Connected to socket")
+
+            // 👇 Automatically join room after connecting
+            joinRoom(JSONObject().put("id", groupId)) {
+                Log.d("Socket", "✅ Joined room $groupId: ${it?.getOrNull(0)}")
+            }
+        }
     }
 
     fun disconnectSocket(){

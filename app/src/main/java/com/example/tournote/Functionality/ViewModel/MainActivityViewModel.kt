@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tournote.Functionality.Repository.ChatRepository
 import com.example.tournote.Functionality.Repository.MainActivityRepository
+import com.example.tournote.GlobalClass
 import com.example.tournote.GroupInfoModel
 import kotlinx.coroutines.launch
 import org.json.JSONObject
@@ -25,7 +26,7 @@ class MainActivityViewModel: ViewModel() {
     val groupId: LiveData<String> = _groupId
 
     init {
-        chatRepo.connectSocket()
+        chatRepo.connectSocket(GlobalClass.group_id!!)
     }
 
 
