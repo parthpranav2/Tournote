@@ -1,6 +1,7 @@
 package com.example.tournote.Functionality.Adapter
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
@@ -8,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.ViewModel.ChatViewModel
+import com.example.tournote.Functionality.data.ChatItem
 import com.example.tournote.Functionality.data.ChatMessage
 import com.example.tournote.R
 import com.google.api.Context
@@ -15,26 +17,33 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class ChatAdapter(val context: android.content.Context): ListAdapter<ChatMessage, RecyclerView.ViewHolder>(ChatDiffCallback()) {
+class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
 
     companion object {
         private const val VIEW_TYPE_USER = 1
         private const val VIEW_TYPE_OTHER = 2
+        private const val VIEW_TYPE_DATE = 3
     }
 
+
     override fun getItemViewType(position: Int): Int {
-        val message = getItem(position)
-        return when {
-            message.isUser -> VIEW_TYPE_USER
-            else -> VIEW_TYPE_OTHER
+        return when (val item = getItem(position)) {
+            is ChatItem.DateHeader -> VIEW_TYPE_DATE
+            is ChatItem.MessageItem -> {
+                if (item.message.isUser) VIEW_TYPE_USER else VIEW_TYPE_OTHER
+            }
         }
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): RecyclerView.ViewHolder {
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
+            VIEW_TYPE_DATE -> {
+                val view = LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_date_header, parent, false)
+                DateHeaderViewHolder(view)
+            }
+
             VIEW_TYPE_USER -> {
                 val view = LayoutInflater.from(parent.context)
                     .inflate(R.layout.item_message_user, parent, false)
@@ -51,16 +60,17 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatMessage
         }
     }
 
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int
-    ) {
-        val message = getItem(position)
-        when (holder) {
-            is UserMessageViewHolder -> holder.bind(message)
-            is OtherMessageViewHolder -> holder.bind(message)
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        when (val item = getItem(position)) {
+            is ChatItem.DateHeader -> (holder as DateHeaderViewHolder).bind(item.label)
+            is ChatItem.MessageItem -> {
+                if (holder is UserMessageViewHolder) holder.bind(item.message)
+                else if (holder is OtherMessageViewHolder) holder.bind(item.message)
+            }
         }
     }
+
 
     // Moved formatTime function inside the class
     private fun formatTime(timestamp: Long): String {
@@ -71,23 +81,38 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatMessage
     inner class UserMessageViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
         private val messageTextView = itemView.findViewById<TextView>(R.id.messageText)
         private val timestampTextView = itemView.findViewById<TextView>(R.id.timeText)
-
+        private val editTV = itemView.findViewById<TextView>(R.id.edited)
         fun bind(message: ChatMessage) {
             messageTextView.text = message.message_content
             timestampTextView.text = formatTime(message.timestamp)
+            if (message.edited == true){
+                editTV.visibility = View.VISIBLE
+            }
         }
     }
+
+    inner class DateHeaderViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
+        private val dateHeaderTextView = itemView.findViewById<TextView>(R.id.dateHeaderText)
+        fun bind(label: String) {
+            dateHeaderTextView.text = label
+        }
+    }
+
 
     inner class OtherMessageViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
         private val messageTextView = itemView.findViewById<TextView>(R.id.messageText)
         private val timestampTextView = itemView.findViewById<TextView>(R.id.timeText)
         private val userNameTextView = itemView.findViewById<TextView>(R.id.userNameText)
         private val profilePicImageView = itemView.findViewById<android.widget.ImageView>(R.id.user_avatar)
+        private val editTV = itemView.findViewById<TextView>(R.id.edited)
 
         fun bind(message: ChatMessage) {
             messageTextView.text = message.message_content
             timestampTextView.text = formatTime(message.timestamp)
             userNameTextView.text = message.user_name
+            if (message.edited == true){
+                editTV.visibility = View.VISIBLE
+            }
 
             // Simplified Glide usage - placeholder and error handle null/empty URLs
             Glide.with(context)
@@ -99,12 +124,17 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatMessage
     }
 }
 
-class ChatDiffCallback : DiffUtil.ItemCallback<ChatMessage>() {
-    override fun areItemsTheSame(oldItem: ChatMessage, newItem: ChatMessage): Boolean {
-        return oldItem.message_id == newItem.message_id
+class ChatItemDiffCallback : DiffUtil.ItemCallback<ChatItem>() {
+    override fun areItemsTheSame(oldItem: ChatItem, newItem: ChatItem): Boolean {
+        return when {
+            oldItem is ChatItem.DateHeader && newItem is ChatItem.DateHeader -> oldItem.label == newItem.label
+            oldItem is ChatItem.MessageItem && newItem is ChatItem.MessageItem ->
+                oldItem.message.message_id == newItem.message.message_id
+            else -> false
+        }
     }
 
-    override fun areContentsTheSame(oldItem: ChatMessage, newItem: ChatMessage): Boolean {
+    override fun areContentsTheSame(oldItem: ChatItem, newItem: ChatItem): Boolean {
         return oldItem == newItem
     }
 }

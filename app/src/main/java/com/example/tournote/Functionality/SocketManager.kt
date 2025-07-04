@@ -8,7 +8,7 @@ import io.socket.emitter.Emitter
 
 object SocketManager {
 
-    private const val SOCKET_URL = "http://192.168.0.103:3000"
+    private const val SOCKET_URL = "http://192.168.0.106:3000"
 
     private lateinit var socket : Socket
 

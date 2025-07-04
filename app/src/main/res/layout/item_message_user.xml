@@ -45,6 +45,16 @@
             android:text="Tap to retry"
             android:textColor="#FF0000"
             android:textSize="12sp" />
+        <TextView
+            android:id="@+id/edited"
+            android:visibility="gone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:layout_marginTop="4dp"
+            android:text="edited"
+            android:textColor="@color/text_primary"
+            android:textSize="12sp" />
 
     </LinearLayout>
 

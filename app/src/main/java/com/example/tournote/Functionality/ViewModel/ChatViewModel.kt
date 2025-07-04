@@ -98,6 +98,95 @@ class ChatViewModel: ViewModel() {
         }
     }
 
+    fun sendUpdate(userMessage: ChatMessage){
+        Log.d("ChatDebug", "Sending message: $userMessage")
+        if (userMessage.message_content?.trim().isNullOrEmpty()) return
+        userMessage.edited = true
+        val index = messageList.indexOfFirst { it.message_id == userMessage.message_id }
+        if (index != -1) {
+            messageList[index] = userMessage  // Replace the element
+        }
+        _messages.value = messageList.toList()
+
+        repo.updateMessage(userMessage, ack = {
+            val res = it[0] as JSONObject
+            if (res.optString("status") == "error"){
+                _resendMsg.value = true
+                Log.d("send_msg_db",res.optString("debug"))
+            }
+        })
+    }
+
+    fun sendDelete(userMessage: ChatMessage){
+        Log.d("ChatDebug", "Sending message: $userMessage")
+        if (userMessage.message_content?.trim().isNullOrEmpty()) return
+
+        val index = messageList.indexOfFirst { it.message_id == userMessage.message_id }
+        if (index != -1) {
+            messageList.removeAt(index)
+        }
+        _messages.value = messageList.toList()
+
+        val data = JSONObject().put("message_id", userMessage.message_id).put("group_id", userMessage.group_id).put("user_id", userMessage.user_id)
+
+        repo.deleteMessage(data, ack = {
+            val res = it[0] as JSONObject
+            if (res.optString("status") == "error"){
+                _resendMsg.value = true
+                Log.d("send_msg_db",res.optString("debug"))
+            }
+        })
+    }
+
+    fun listenMsgDelete() {
+        repo.listenUpdate { args ->
+            val data = args[0] as JSONObject
+            val msg_id = data.optString("message_id")
+
+            // 👇 Switch to main thread for LiveData update
+            viewModelScope.launch {
+                withContext(Dispatchers.Main) {
+                    val index = messageList.indexOfFirst { it.message_id == msg_id }
+                    if (index != -1) {
+                        messageList.removeAt(index)
+                    }
+                    _messages.value = messageList.toList()
+                }
+            }
+        }
+    }
+
+
+
+    fun listenMsgUpdate() {
+        repo.listenUpdate { args ->
+            val data = args[0] as JSONObject
+            val msg_id = data.optString("message_id")
+            val msg = ChatMessage(
+                message_id = data.optString("message_id"),
+                message_content = data.optString("message_content"),
+                user_name = data.optString("user_name"),
+                group_id = data.optString("group_id"),
+                user_id = data.optString("user_id"),
+                timestamp = data.optLong("timestamp"),
+                edited = true,
+                isUser = false,
+                profile_pic = data.optString("profile_pic")
+            )
+
+            // 👇 Switch to main thread for LiveData update
+            viewModelScope.launch {
+                withContext(Dispatchers.Main) {
+                    val index = messageList.indexOfFirst { it.message_id == msg_id }
+                    if (index != -1) {
+                        messageList[index] = msg  // Replace the element
+                    }
+                    _messages.value = messageList.toList()
+                }
+            }
+        }
+    }
+
 
     fun getAllMsgFromDB(groupId: String, context: Context) {
         Log.d("ChatDebug", "Calling getAllMsgFromDB() for groupId: $groupId")

@@ -29,6 +29,24 @@ class ChatRepository {
         SocketManager.emit("join_room",id, ack)
     }
 
+    fun deleteMessage(data: JSONObject,ack: Ack?=null){
+        SocketManager.emit("delete_message",data,ack)
+    }
+
+    fun listenDelete(listenMsg: Emitter.Listener){
+        SocketManager.on("delete_recieved",listenMsg)
+    }
+
+    fun updateMessage(data: ChatMessage,ack: Ack?=null){
+        val msg_data = data.toJson()
+        SocketManager.emit("update_message",msg_data,ack)
+    }
+
+    fun listenUpdate(listenMsg: Emitter.Listener){
+        SocketManager.on("update_recieved", listenMsg)
+    }
+
+
     fun listenMessage(listenMsg: Emitter.Listener){
         SocketManager.on("message_recieved", listenMsg)
     }

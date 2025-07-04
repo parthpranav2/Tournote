@@ -8,6 +8,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import java.text.SimpleDateFormat
+import java.util.Calendar
 import android.widget.Button
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -21,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.tournote.Functionality.Adapter.ChatAdapter
 import com.example.tournote.Functionality.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
+import com.example.tournote.Functionality.data.ChatItem
 import com.example.tournote.Functionality.data.ChatMessage
 import com.example.tournote.GlobalClass
 import com.example.tournote.Onboarding.ViewModel.authViewModel
@@ -29,6 +32,7 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.Locale
 import java.util.UUID
 import kotlin.text.clear
 
@@ -87,8 +91,9 @@ class ChatsFragment : Fragment() {
         chatViewModel.getAllMsgFromDB(GlobalClass.group_id?:"",requireContext())
         chatViewModel.messages.observe(viewLifecycleOwner) { messages ->
             val updated_msg = processMessages(messages)
+            val itemList = groupMessagesByDate(updated_msg)
             Log.d("ChatDebug","lets see:${messages}")
-            chatAdapter.submitList(updated_msg) {
+            chatAdapter.submitList(itemList) {
                 recyclerViewChat.scrollToPosition(messages.size - 1)
             }
         }
@@ -97,27 +102,29 @@ class ChatsFragment : Fragment() {
         setupClickListeners()
         observeViewModel()
         chatViewModel.listenMsg()
+        chatViewModel.listenMsgDelete()
+        chatViewModel.listenMsgUpdate()
 
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        val toolbar = view.findViewById<View>(R.id.toolbar)
-        val rootLayout = view.findViewById<View>(R.id.rootLayout)
-
-        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
-            val topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
-            toolbar.setPadding(
-                toolbar.paddingLeft,
-                12,
-                toolbar.paddingRight,
-                toolbar.paddingBottom
-            )
-            insets
-        }
-    }
+//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+//        super.onViewCreated(view, savedInstanceState)
+//
+//        val toolbar = view.findViewById<View>(R.id.toolbar)
+//        val rootLayout = view.findViewById<View>(R.id.rootLayout)
+//
+//        ViewCompat.setOnApplyWindowInsetsListener(rootLayout) { _, insets ->
+//            val topInset = insets.getInsets(WindowInsetsCompat.Type.systemBars()).top
+//            toolbar.setPadding(
+//                toolbar.paddingLeft,
+//                12,
+//                toolbar.paddingRight,
+//                toolbar.paddingBottom
+//            )
+//            insets
+//        }
+//    }
 
 
 
@@ -170,6 +177,13 @@ class ChatsFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+
+        chatViewModel.resendMsg.observe(viewLifecycleOwner) { it ->
+            if (it == true){
+                Toast.makeText(requireContext(), "Error: Message is not saved", Toast.LENGTH_SHORT).show()
+                chatViewModel.clearResend()
+            }
+        }
 
         mainViewModel.groupId.observe(viewLifecycleOwner) {
             grp_id = it
@@ -224,5 +238,36 @@ class ChatsFragment : Fragment() {
         }
 
     }
+
+    fun groupMessagesByDate(messages: List<ChatMessage>): List<ChatItem> {
+        val result = mutableListOf<ChatItem>()
+        val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        val labelFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val today = Calendar.getInstance()
+        val yesterday = Calendar.getInstance().apply { add(Calendar.DATE, -1) }
+
+        var lastDateKey: String? = null
+
+        for (msg in messages.sortedBy { it.timestamp }) {
+            val msgDate = Calendar.getInstance().apply { timeInMillis = msg.timestamp }
+            val msgKey = dateFormatter.format(msgDate.time)
+
+            if (msgKey != lastDateKey) {
+                val label = when (msgKey) {
+                    dateFormatter.format(today.time) -> "Today"
+                    dateFormatter.format(yesterday.time) -> "Yesterday"
+                    else -> labelFormatter.format(msgDate.time)
+                }
+                result.add(ChatItem.DateHeader(label))
+                lastDateKey = msgKey
+            }
+
+            result.add(ChatItem.MessageItem(msg))
+        }
+
+        return result
+    }
+
+
 
 }
