@@ -1,9 +1,11 @@
 package com.example.tournote.Functionality.Adapter
 
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -18,6 +20,9 @@ import java.util.Date
 import java.util.Locale
 
 class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
+    private var selectedMessageId: String? = null
+    var selectionListener: ((selectedCount: Boolean) -> Unit)? = null
+
 
     companion object {
         private const val VIEW_TYPE_USER = 1
@@ -88,6 +93,23 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
             if (message.edited == true){
                 editTV.visibility = View.VISIBLE
             }
+            itemView.setBackgroundColor(
+                if (message.isSelected)
+                    ContextCompat.getColor(itemView.context, R.color.selected_bg)
+                else
+                    Color.TRANSPARENT
+            )
+
+            itemView.setOnLongClickListener {
+                toggleSelection(message)
+                true
+            }
+
+            itemView.setOnClickListener {
+                if (selectedMessageId == message.message_id) clearSelection()
+            }
+
+
         }
     }
 
@@ -122,6 +144,57 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
                 .into(profilePicImageView)
         }
     }
+    fun toggleSelection(message: ChatMessage) {
+        val previousId = selectedMessageId
+        val newId = message.message_id
+
+        if (previousId == newId) {
+            clearSelection()
+        } else {
+            val oldIndex = currentList.indexOfFirst {
+                it is ChatItem.MessageItem && it.message.message_id == previousId
+            }
+            val newIndex = currentList.indexOfFirst {
+                it is ChatItem.MessageItem && it.message.message_id == newId
+            }
+
+            (currentList.filterIsInstance<ChatItem.MessageItem>()).forEach {
+                it.message.isSelected = false
+            }
+
+            message.isSelected = true
+            selectedMessageId = newId
+
+            if (oldIndex >= 0) notifyItemChanged(oldIndex)
+            if (newIndex >= 0) notifyItemChanged(newIndex)
+
+            selectionListener?.invoke(true)
+        }
+    }
+
+
+    fun clearSelection() {
+        val previousIndex = currentList.indexOfFirst {
+            it is ChatItem.MessageItem && it.message.message_id == selectedMessageId
+        }
+
+        (currentList.filterIsInstance<ChatItem.MessageItem>()).forEach {
+            it.message.isSelected = false
+        }
+
+        selectedMessageId = null
+        if (previousIndex >= 0) notifyItemChanged(previousIndex)
+
+        selectionListener?.invoke(false)
+    }
+
+    fun getSelectedMessage(): ChatMessage? {
+        return (currentList.filterIsInstance<ChatItem.MessageItem>())
+            .firstOrNull { it.message.message_id == selectedMessageId }
+            ?.message
+    }
+
+
 }
 
 class ChatItemDiffCallback : DiffUtil.ItemCallback<ChatItem>() {

@@ -11,7 +11,8 @@ data class ChatMessage(
     var edited: Boolean = false,
     var isUser: Boolean = false,
     var message_id: String? = " ",
-    var profile_pic: String? = null
+    var profile_pic: String? = null,
+    var isSelected: Boolean = false
 ){
 
     companion object{
