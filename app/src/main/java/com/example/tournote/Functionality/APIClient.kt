@@ -4,7 +4,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-private val BASE_URL = "http://192.168.0.106:3000"
+private val BASE_URL = "https://b659-103-178-126-232.ngrok-free.app"
 
 object APIClient {
 

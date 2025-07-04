@@ -30,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var viewPager: ViewPager2
     private val viewModel: MainActivityViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels()
+    private val isChatsOpen = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,10 +39,35 @@ class MainActivity : AppCompatActivity() {
 
         val groupId = intent.getStringExtra("GROUP_ID")
         GlobalClass.group_id = groupId
-
+        viewModel.loadGroup(groupId.toString())
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        val group_logo = binding.grpLogo
+        val group_name = binding.grpName
+
+
+        viewModel.groupInfo.observe(this){
+            it.onSuccess {
+                group_name.text = it.name ?: "Unknown Group"
+                Log.d("grpname", "grpname: ${it.name}")
+                if (it.profilePic == "null" || it.profilePic.isNullOrBlank()) {
+                    group_logo.setImageResource(R.drawable.defaultgroupimage)
+                } else {
+                    // Load the image using Glide or any other image loading library
+                    com.bumptech.glide.Glide.with(this)
+                        .load(it.profilePic)
+                        .placeholder(R.drawable.defaultgroupimage)
+                        .error(R.drawable.defaultgroupimage)
+                        .into(group_logo)
+                }
+            }
+            it.onFailure {
+                group_name.text = "Error loading group name"
+                group_logo.setImageResource(R.drawable.defaultgroupimage)
+            }
+        }
 
         viewPager=binding.viewPager
         viewPager.adapter= FunctionalityPagerAdapter(this)
@@ -105,6 +131,7 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.bottomButtons.visibility = View.GONE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
                         binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
@@ -185,11 +212,24 @@ class MainActivity : AppCompatActivity() {
                 bottomNav.visibility = View.GONE
             } else {
                 // Keyboard is closed
-                bottomNav.visibility = View.VISIBLE
+                if(viewPager.currentItem!=3){
+                    bottomNav.visibility = View.VISIBLE
+                }else{
+                    bottomNav.visibility = View.GONE
+                }
             }
         }
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        if(viewPager.currentItem==3){
+            viewPager.currentItem=0
+        }
+        else{
+            redirectToActivity(GroupSelectorActivity::class.java)
+        }
+    }
 
     override fun onStop() {
         super.onStop()

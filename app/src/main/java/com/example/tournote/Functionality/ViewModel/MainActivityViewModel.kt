@@ -28,12 +28,18 @@ class MainActivityViewModel: ViewModel() {
         chatRepo.connectSocket()
     }
 
+
     fun loadGroup(groupId: String) {
         viewModelScope.launch {
-            _groupId.value = groupId
+            _groupId.value=groupId
             val result = repo.groupData(groupId)
             _groupInfo.value = result
-            chatView.joinROOM(groupId)
+        }
+    }
+
+    fun loadChatRoom() {
+        viewModelScope.launch {
+            chatView.joinROOM(groupId.toString())
         }
     }
 

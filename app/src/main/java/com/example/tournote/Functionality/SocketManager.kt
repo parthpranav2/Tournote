@@ -8,7 +8,7 @@ import io.socket.emitter.Emitter
 
 object SocketManager {
 
-    private const val SOCKET_URL = "http://192.168.0.106:3000"
+    private const val SOCKET_URL = "https://b659-103-178-126-232.ngrok-free.app"
 
     private lateinit var socket : Socket
 

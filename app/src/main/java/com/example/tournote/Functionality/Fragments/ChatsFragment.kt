@@ -42,7 +42,7 @@ class ChatsFragment : Fragment() {
     private val chatViewModel: ChatViewModel by viewModels()
     lateinit var recyclerViewChat : RecyclerView
     lateinit var chatAdapter : ChatAdapter
-    lateinit var toolbar: LinearLayout
+
     private val authViewmodel: authViewModel by viewModels()
     lateinit var editTextMessage: EditText
     lateinit var buttonSend : FloatingActionButton
@@ -54,34 +54,14 @@ class ChatsFragment : Fragment() {
     ): View? {
         // Inflate the layout for this fragment
         val view = inflater.inflate(R.layout.fragment_chats, container, false)
-        val group_logo = view.findViewById<android.widget.ImageView>(R.id.grp_logo)
-        val group_name = view.findViewById<android.widget.TextView>(R.id.grp_name)
+
         recyclerViewChat = view.findViewById<RecyclerView>(R.id.recyclerViewChat)
         editTextMessage = view.findViewById<EditText>(R.id.editTextMessage)
         buttonSend = view.findViewById<FloatingActionButton>(R.id.buttonSend)
-        toolbar = view.findViewById<LinearLayout>(R.id.toolbar)
-        chatAdapter = ChatAdapter(requireContext())
-        mainViewModel.loadGroup(GlobalClass.group_id?:"")
 
-        mainViewModel.groupInfo.observe(viewLifecycleOwner) {
-            it.onSuccess {
-                group_name.text = it.name ?: "Unknown Group"
-                if (it.profilePic == "null" || it.profilePic.isNullOrBlank()) {
-                    group_logo.setImageResource(R.drawable.defaultgroupimage)
-                } else {
-                    // Load the image using Glide or any other image loading library
-                    com.bumptech.glide.Glide.with(requireContext())
-                        .load(it.profilePic)
-                        .placeholder(R.drawable.defaultgroupimage)
-                        .error(R.drawable.defaultgroupimage)
-                        .into(group_logo)
-                }
-            }
-            it.onFailure {
-                group_name.text = "Error loading group name"
-                group_logo.setImageResource(R.drawable.defaultgroupimage)
-            }
-        }
+        chatAdapter = ChatAdapter(requireContext())
+        mainViewModel.loadChatRoom()
+
 
         recyclerViewChat.adapter =chatAdapter
         recyclerViewChat.layoutManager = LinearLayoutManager(requireContext()).apply {
@@ -267,7 +247,6 @@ class ChatsFragment : Fragment() {
 
         return result
     }
-
 
 
 }

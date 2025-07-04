@@ -12,4 +12,5 @@
     <color name="text_primary">#E0E0E0</color>
     <color name="selected_bg">#245056</color>
 
+    <color name="green_theme_Light_taskbar">#0F2729</color>
 </resources>
