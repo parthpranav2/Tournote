@@ -267,6 +267,8 @@ class SmartRoutePlannerFragment : Fragment() {
 
         // When btnDestination (the UI element for Destination) is clicked, open search for end point
         binding.btnDestination.setOnClickListener {
+            binding.btnCurrent.visibility=View.GONE
+
             currentSearchTarget = SearchTarget.END_POINT
             binding.frmSearch.visibility = View.VISIBLE
             binding.txtSearch.requestFocus()
