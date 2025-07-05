@@ -7,6 +7,9 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -15,19 +18,25 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
+import com.example.tournote.Functionality.MenuActionHandler
 import com.example.tournote.Functionality.SocketManager
 import com.example.tournote.Functionality.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
+import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
 import com.example.tournote.R
+import com.example.tournote.databinding.ActivityGroupSelectorBinding
 import com.example.tournote.databinding.ActivityMainBinding
+import com.google.firebase.logger.Logger
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewPager: ViewPager2
+    lateinit var moreOptions: ImageButton
     private val viewModel: MainActivityViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels()
     private val isChatsOpen = false
@@ -36,7 +45,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContentView(R.layout.activity_main)
+
+
 
         val groupId = intent.getStringExtra("GROUP_ID")
         GlobalClass.group_id = groupId
@@ -53,8 +63,13 @@ class MainActivity : AppCompatActivity() {
 
         val group_logo = binding.grpLogo
         val group_name = binding.grpName
+        moreOptions = findViewById(R.id.more_options)
 
-        viewModel.groupInfo.observe(this) {
+        moreOptions.setOnClickListener {
+            showPopupMenu(it)
+        }
+
+        viewModel.groupInfo.observe(this){
             it.onSuccess {
                 group_name.text = it.name ?: "Unknown Group"
                 Log.d("grpname", "grpname: ${it.name}")
@@ -148,20 +163,19 @@ class MainActivity : AppCompatActivity() {
                         binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                         binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
-                    4 -> {
+                    4->{
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplannernotactive)
                         binding.imgChats.setImageResource(R.drawable.chatsnotactive)
                         binding.imgExpenses.setImageResource(R.drawable.expensenotactive)
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsactive)
 
-                        binding.bottomButtons.visibility = View.VISIBLE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
                 }
             }
@@ -288,4 +302,29 @@ class MainActivity : AppCompatActivity() {
         Log.d("ChatDebug", "socket disconnected")
         SocketManager.disconnect()
     }
+
+    private fun showPopupMenu(anchor: View) {
+        val popup = PopupMenu(this, anchor)
+        popup.menuInflater.inflate(R.menu.menu_chat, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            val currentFragment = getCurrentFragment()
+            if (currentFragment is MenuActionHandler) {
+                currentFragment.onMenuActionSelected(item.itemId)
+                true
+            } else {
+                false
+            }
+        }
+
+        popup.show()
+    }
+
+    fun getCurrentFragment(): Fragment? {
+        val fragmentTag = "f" + binding.viewPager.currentItem
+        return supportFragmentManager.findFragmentByTag(fragmentTag)
+    }
+
+
+
 }

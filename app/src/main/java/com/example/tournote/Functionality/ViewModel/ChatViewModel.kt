@@ -2,25 +2,34 @@ package com.example.tournote.Functionality.ViewModel
 
 import android.content.Context
 import android.util.Log
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.tournote.Functionality.Adapter.ChatAdapter
 import com.example.tournote.Functionality.Repository.ChatRepository
+import com.example.tournote.Functionality.data.ChatItem
 import com.example.tournote.Functionality.data.ChatMessage
+import com.example.tournote.Onboarding.ViewModel.authViewModel
 import io.socket.client.Ack
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
+import java.util.UUID
 import kotlin.coroutines.AbstractCoroutineContextKey
+import kotlin.getValue
 
 class ChatViewModel: ViewModel() {
 
     private val repo: ChatRepository = ChatRepository()
 
+    var hasStartedListening = false
     private val _incomeMessage = MutableLiveData<ChatMessage>()
     val incomeMessage : LiveData<ChatMessage>  get() = _incomeMessage
 
@@ -64,16 +73,13 @@ class ChatViewModel: ViewModel() {
     }
 
     fun joinROOM(groupId: String){
-        if (currentRoomJoined != groupId) {
-            val data = JSONObject().put("id", groupId)
-            repo.joinRoom(data,null)
-            currentRoomJoined = groupId
-        } else {
-            Log.d("SocketJoin", "Already in room $groupId, skipping join")
-        }
+
     }
 
     fun listenMsg() {
+        if (hasStartedListening) return
+        hasStartedListening = true
+
         repo.listenMessage { args ->
             val data = args[0] as JSONObject
             val msg = ChatMessage(
@@ -224,6 +230,42 @@ class ChatViewModel: ViewModel() {
             }
         }
     }
+
+    fun groupMessagesByDate(messages: List<ChatMessage>): List<ChatItem> {
+        val result = mutableListOf<ChatItem>()
+        val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
+        val labelFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
+        val today = Calendar.getInstance()
+        val yesterday = Calendar.getInstance().apply { add(Calendar.DATE, -1) }
+
+        var lastDateKey: String? = null
+
+        for (msg in messages.sortedBy { it.timestamp }) {
+            val msgDate = Calendar.getInstance().apply { timeInMillis = msg.timestamp }
+            val msgKey = dateFormatter.format(msgDate.time)
+
+            if (msgKey != lastDateKey) {
+                val label = when (msgKey) {
+                    dateFormatter.format(today.time) -> "Today"
+                    dateFormatter.format(yesterday.time) -> "Yesterday"
+                    else -> labelFormatter.format(msgDate.time)
+                }
+                result.add(ChatItem.DateHeader(label))
+                lastDateKey = msgKey
+            }
+
+            result.add(ChatItem.MessageItem(msg))
+        }
+
+        return result
+    }
+
+
+
+    fun generateShortMessageId(): String {
+        return UUID.randomUUID().toString().take(8)
+    }
+
     fun clearError() {
         _error.value = null
     }

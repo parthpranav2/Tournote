@@ -77,6 +77,18 @@
             app:pressedTranslationZ="4dp"
             app:backgroundTint="@color/darkBluetext"
             app:fabSize="mini" />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/buttonEdit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:src="@drawable/baseline_edit_24"
+            android:iconTint="@color/white"
+            app:tint="?attr/colorOnBackground"
+            android:visibility="gone"
+            app:pressedTranslationZ="4dp"
+            app:backgroundTint="@color/darkBluetext"
+            app:fabSize="mini" />
 
     </LinearLayout>
 

@@ -18,9 +18,5 @@ interface Api_Interface {
     ): Response<List<ChatMessage>>
 
 
-    @POST("/messages")
-    fun sendMessageRetry(
-        @Body request: ChatMessage
-    ): Call<ResponseBody>
 
 }

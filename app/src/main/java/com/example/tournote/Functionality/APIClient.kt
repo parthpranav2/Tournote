@@ -4,7 +4,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
 
-private val BASE_URL = "https://b659-103-178-126-232.ngrok-free.app"
+private val BASE_URL = "https://tournote-chat-backend.onrender.com"
 
 object APIClient {
 

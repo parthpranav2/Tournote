@@ -8,12 +8,17 @@ import io.socket.emitter.Emitter
 
 object SocketManager {
 
-    private const val SOCKET_URL = "https://b659-103-178-126-232.ngrok-free.app"
+    private const val SOCKET_URL = "https://tournote-chat-backend.onrender.com"
 
     private lateinit var socket : Socket
 
     fun initSocket(){
-        socket = IO.socket(SOCKET_URL)
+        val opts = IO.Options().apply {
+            transports = arrayOf("websocket")
+            forceNew = true
+            reconnection = true
+        }
+        socket = IO.socket(SOCKET_URL,opts)
     }
 
     fun connect() {

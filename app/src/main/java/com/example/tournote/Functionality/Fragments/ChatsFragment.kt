@@ -20,7 +20,9 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.tournote.Functionality.Activity.MainActivity
 import com.example.tournote.Functionality.Adapter.ChatAdapter
+import com.example.tournote.Functionality.MenuActionHandler
 import com.example.tournote.Functionality.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.Functionality.data.ChatItem
@@ -36,16 +38,16 @@ import java.util.Locale
 import java.util.UUID
 import kotlin.text.clear
 
-class ChatsFragment : Fragment() {
+class ChatsFragment : Fragment(), MenuActionHandler {
 
     private val mainViewModel: MainActivityViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels()
     lateinit var recyclerViewChat : RecyclerView
     lateinit var chatAdapter : ChatAdapter
-
     private val authViewmodel: authViewModel by viewModels()
     lateinit var editTextMessage: EditText
     lateinit var buttonSend : FloatingActionButton
+    lateinit var buttonEdit : FloatingActionButton
     private var grp_id: String? = null
 
     override fun onCreateView(
@@ -58,6 +60,7 @@ class ChatsFragment : Fragment() {
         recyclerViewChat = view.findViewById<RecyclerView>(R.id.recyclerViewChat)
         editTextMessage = view.findViewById<EditText>(R.id.editTextMessage)
         buttonSend = view.findViewById<FloatingActionButton>(R.id.buttonSend)
+        buttonEdit = view.findViewById<FloatingActionButton>(R.id.buttonEdit)
 
         chatAdapter = ChatAdapter(requireContext())
         mainViewModel.loadChatRoom()
@@ -71,10 +74,10 @@ class ChatsFragment : Fragment() {
         chatViewModel.getAllMsgFromDB(GlobalClass.group_id?:"",requireContext())
         chatViewModel.messages.observe(viewLifecycleOwner) { messages ->
             val updated_msg = processMessages(messages)
-            val itemList = groupMessagesByDate(updated_msg)
+            val itemList = chatViewModel.groupMessagesByDate(updated_msg)
             Log.d("ChatDebug","lets see:${messages}")
             chatAdapter.submitList(itemList) {
-                recyclerViewChat.scrollToPosition(chatAdapter.itemCount-1)
+                recyclerViewChat.scrollToPosition(chatAdapter.itemCount - 1)
             }
         }
 
@@ -106,7 +109,60 @@ class ChatsFragment : Fragment() {
 //        }
 //    }
 
+    override fun onResume() {
+        super.onResume()
 
+        val mainActivity = activity as? MainActivity
+
+        chatAdapter.selectionListener={
+
+         if (it == true){
+             mainActivity?.moreOptions?.visibility = View.VISIBLE
+             buttonSend.visibility = View.GONE
+             buttonEdit.visibility = View.VISIBLE
+         }else{
+             mainActivity?.moreOptions?.visibility = View.GONE
+             buttonSend.visibility = View.VISIBLE
+             buttonEdit.visibility = View.GONE
+         }
+
+        }
+
+    }
+
+    override fun onMenuActionSelected(actionId: Int) {
+        when (actionId) {
+            R.id.action_edit -> {
+                val msg_data = chatAdapter.getSelectedMessage()
+                editTextMessage.setText(msg_data?.message_content)
+
+                buttonEdit.setOnClickListener {
+                    val content = editTextMessage.text.toString()
+                    msg_data?.message_content = content
+                    if (msg_data != null){
+                        chatViewModel.sendUpdate(msg_data)
+                        Toast.makeText(requireContext(), "Message edited successfully", Toast.LENGTH_SHORT).show()
+                        chatAdapter.clearSelection()
+                        editTextMessage.text.clear()
+                    }else{
+                        Toast.makeText(requireContext(), "Message can't be edit", Toast.LENGTH_SHORT).show()
+                        editTextMessage.text.clear()
+                        chatAdapter.clearSelection()
+                    }
+                }
+
+            }
+            R.id.action_delete -> {
+                val msg_data = chatAdapter.getSelectedMessage()
+                if (msg_data != null){
+                    chatViewModel.sendDelete(msg_data)
+                    Toast.makeText(requireContext(), "Message deleted successfully", Toast.LENGTH_SHORT).show()
+                }else{
+                    Toast.makeText(requireContext(), "Message can't be delete", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
 
 
     private fun setupRecyclerView() {
@@ -122,17 +178,6 @@ class ChatsFragment : Fragment() {
 
     }
 
-    private fun processMessages(messages: List<ChatMessage>): List<ChatMessage> {
-        val userID = authViewmodel.repo.getUid()
-        for (message in messages) {
-            if (message.user_id == userID) {
-                message.isUser = true  // update field
-            }else{
-                message.isUser = false
-            }
-        }
-        return messages
-    }
 
     private fun setupClickListeners() {
         buttonSend.setOnClickListener {
@@ -180,10 +225,18 @@ class ChatsFragment : Fragment() {
             }
         }
     }
-    fun generateShortMessageId(): String {
-        return UUID.randomUUID().toString().take(8)
-    }
 
+    private fun processMessages(messages: List<ChatMessage>): List<ChatMessage> {
+        val userID = authViewmodel.repo.getUid()
+        for (message in messages) {
+            if (message.user_id == userID) {
+                message.isUser = true  // update field
+            }else{
+                message.isUser = false
+            }
+        }
+        return messages
+    }
 
 
     fun sendMsgTOView(){
@@ -200,7 +253,7 @@ class ChatsFragment : Fragment() {
                         val user_name = user_data.get("name").toString()
                         val profile_url: String? = user_data.get("profilePic").toString()
                         val group_id = GlobalClass.group_id
-                        val msg_id = generateShortMessageId()
+                        val msg_id = chatViewModel.generateShortMessageId()
                         val msg = ChatMessage(
                             msg_content, user_name, group_id, userID, profile_pic = profile_url, message_id = msg_id,isUser = true
                         )
@@ -219,34 +272,7 @@ class ChatsFragment : Fragment() {
 
     }
 
-    fun groupMessagesByDate(messages: List<ChatMessage>): List<ChatItem> {
-        val result = mutableListOf<ChatItem>()
-        val dateFormatter = SimpleDateFormat("yyyyMMdd", Locale.getDefault())
-        val labelFormatter = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-        val today = Calendar.getInstance()
-        val yesterday = Calendar.getInstance().apply { add(Calendar.DATE, -1) }
 
-        var lastDateKey: String? = null
-
-        for (msg in messages.sortedBy { it.timestamp }) {
-            val msgDate = Calendar.getInstance().apply { timeInMillis = msg.timestamp }
-            val msgKey = dateFormatter.format(msgDate.time)
-
-            if (msgKey != lastDateKey) {
-                val label = when (msgKey) {
-                    dateFormatter.format(today.time) -> "Today"
-                    dateFormatter.format(yesterday.time) -> "Yesterday"
-                    else -> labelFormatter.format(msgDate.time)
-                }
-                result.add(ChatItem.DateHeader(label))
-                lastDateKey = msgKey
-            }
-
-            result.add(ChatItem.MessageItem(msg))
-        }
-
-        return result
-    }
 
 
 }
