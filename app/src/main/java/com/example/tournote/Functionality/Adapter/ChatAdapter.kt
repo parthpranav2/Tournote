@@ -4,6 +4,7 @@ import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
@@ -71,7 +72,7 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
             is ChatItem.DateHeader -> (holder as DateHeaderViewHolder).bind(item.label)
             is ChatItem.MessageItem -> {
                 if (holder is UserMessageViewHolder) holder.bind(item.message)
-                else if (holder is OtherMessageViewHolder) holder.bind(item.message)
+                else if (holder is OtherMessageViewHolder) holder.bind(item.message,position)
             }
         }
     }
@@ -87,6 +88,8 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
         private val messageTextView = itemView.findViewById<TextView>(R.id.messageText)
         private val timestampTextView = itemView.findViewById<TextView>(R.id.timeText)
         private val editTV = itemView.findViewById<TextView>(R.id.edited)
+        private val body = itemView.findViewById<LinearLayout>(R.id.halloutBody)
+
         fun bind(message: ChatMessage) {
             messageTextView.text = message.message_content
             timestampTextView.text = formatTime(message.timestamp)
@@ -99,6 +102,14 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
                 else
                     Color.TRANSPARENT
             )
+
+            val isLastOfStreak = isLastMessageOfStreak(position, message.user_id)
+
+            if (isLastOfStreak){
+                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_user)
+            }else{
+                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_streak_user)
+            }
 
             itemView.setOnLongClickListener {
                 toggleSelection(message)
@@ -127,14 +138,30 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
         private val userNameTextView = itemView.findViewById<TextView>(R.id.userNameText)
         private val profilePicImageView = itemView.findViewById<android.widget.ImageView>(R.id.user_avatar)
         private val editTV = itemView.findViewById<TextView>(R.id.edited)
+        private val body = itemView.findViewById<LinearLayout>(R.id.halloutBody)
 
-        fun bind(message: ChatMessage) {
+        fun bind(message: ChatMessage, position:Int) {
             messageTextView.text = message.message_content
             timestampTextView.text = formatTime(message.timestamp)
             userNameTextView.text = message.user_name
             if (message.edited == true){
                 editTV.visibility = View.VISIBLE
             }
+
+            // Show profile image logic
+            val isLastOfUserStreak = isLastMessageOfStreak(position, message.user_id)
+            if (isLastOfUserStreak){
+                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_bot)
+                profilePicImageView.visibility = View.VISIBLE
+            }else{
+                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_streak_bot)
+                profilePicImageView.visibility = View.INVISIBLE
+            }
+
+            // Show/hide username based on start of streak
+            val isFirstOfStreak = isFirstMessageOfStreak(position, message.user_id)
+            userNameTextView.visibility = if (isFirstOfStreak) View.VISIBLE else View.GONE
+
 
             // Simplified Glide usage - placeholder and error handle null/empty URLs
             Glide.with(context)
@@ -144,6 +171,31 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
                 .into(profilePicImageView)
         }
     }
+
+    private fun isFirstMessageOfStreak(position: Int, userId: String?): Boolean {
+        // If it's the first message in the list, it's definitely first of a streak
+        val previousIndex = position - 1
+        if (previousIndex < 0) return true
+
+        val prevItem = getItem(previousIndex)
+        if (prevItem is ChatItem.MessageItem) {
+            return prevItem.message.user_id != userId
+        }
+        return true
+    }
+
+    private fun isLastMessageOfStreak(position: Int, userId: String?): Boolean {
+        // Check if next message exists
+        val nextIndex = position + 1
+        if (nextIndex >= itemCount) return true
+
+        val nextItem = getItem(nextIndex)
+        if (nextItem is ChatItem.MessageItem) {
+            return nextItem.message.user_id != userId
+        }
+        return true
+    }
+
     fun toggleSelection(message: ChatMessage) {
         val previousId = selectedMessageId
         val newId = message.message_id

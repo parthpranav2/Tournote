@@ -88,7 +88,7 @@
                 android:layout_centerHorizontal="true">
                 <ImageView
                     android:id="@+id/imgSmartRoute"
-                    android:layout_width="50dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:src="@drawable/smartplanneractive"/>
                 <TextView
@@ -101,7 +101,7 @@
                     android:layout_marginTop="5dp"
                     android:textSize="12sp"
                     android:layout_marginBottom="5dp"
-                    android:textColor="@color/darkBluetext"
+                    android:textColor="@color/white"
                     />
             </LinearLayout>
 
@@ -124,7 +124,7 @@
                 android:layout_centerHorizontal="true">
                 <ImageView
                     android:id="@+id/imgMemories"
-                    android:layout_width="50dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:src="@drawable/memoriesnotactive"/>
                 <TextView
@@ -137,7 +137,7 @@
                     android:layout_marginTop="5dp"
                     android:textSize="13sp"
                     android:layout_marginBottom="5dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/darkBluetext"
                     />
             </LinearLayout>
         </RelativeLayout>
@@ -159,7 +159,7 @@
                 android:layout_centerHorizontal="true">
                 <ImageView
                     android:id="@+id/imgExpenses"
-                    android:layout_width="50dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:src="@drawable/expensenotactive"/>
                 <TextView
@@ -171,7 +171,7 @@
                     android:textStyle="bold"
                     android:textSize="13sp"
                     android:layout_marginBottom="5dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/darkBluetext"
                     />
             </LinearLayout>
         </RelativeLayout>
@@ -194,7 +194,7 @@
                 android:layout_centerHorizontal="true">
                 <ImageView
                     android:id="@+id/imgChats"
-                    android:layout_width="50dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:src="@drawable/chatsnotactive"/>
                 <TextView
@@ -207,7 +207,7 @@
                     android:layout_marginTop="5dp"
                     android:textSize="13sp"
                     android:layout_marginBottom="5dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/darkBluetext"
                     />
             </LinearLayout>
         </RelativeLayout>
@@ -229,7 +229,7 @@
                 android:layout_centerHorizontal="true">
                 <ImageView
                     android:id="@+id/imgTrackGroupMates"
-                    android:layout_width="50dp"
+                    android:layout_width="40dp"
                     android:layout_height="wrap_content"
                     android:src="@drawable/trackfriendsnotactive"/>
                 <TextView
@@ -242,7 +242,7 @@
                     android:layout_marginTop="5dp"
                     android:textSize="13sp"
                     android:layout_marginBottom="5dp"
-                    android:textColor="@color/white"
+                    android:textColor="@color/darkBluetext"
                     />
             </LinearLayout>
         </RelativeLayout>

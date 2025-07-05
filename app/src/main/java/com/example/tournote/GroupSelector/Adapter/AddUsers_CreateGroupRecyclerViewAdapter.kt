@@ -48,6 +48,7 @@ class AddUsers_CreateGroupRecyclerViewAdapter(
                 .into(holder.profilePhoto)
         }
 
+
         // Initial state
         holder.tick.setImageResource(R.drawable.untick)
         holder.tick.tag = R.drawable.untick

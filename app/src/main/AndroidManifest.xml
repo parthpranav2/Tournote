@@ -3,6 +3,9 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 
     <application
         android:name=".ApplicationClass"
@@ -35,6 +38,8 @@
         <activity
             android:name=".Onboarding.Activity.GettingStartedActivity"
             android:exported="false" />
+
+
         <activity
             android:name=".Onboarding.Activity.CustomSplashScreen"
             android:exported="true">

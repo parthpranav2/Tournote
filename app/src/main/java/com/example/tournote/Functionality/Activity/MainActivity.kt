@@ -1,6 +1,8 @@
 package com.example.tournote.Functionality.Activity
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
@@ -9,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -19,11 +22,8 @@ import com.example.tournote.Functionality.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
-import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
 import com.example.tournote.R
-import com.example.tournote.databinding.ActivityGroupSelectorBinding
 import com.example.tournote.databinding.ActivityMainBinding
-import com.google.firebase.logger.Logger
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
@@ -31,6 +31,7 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainActivityViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels()
     private val isChatsOpen = false
+    private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,11 +45,16 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Check and request location permission
+        checkLocationPermission()
+
+        window.navigationBarColor = ContextCompat.getColor(this, R.color.green_theme_Light_taskbar)
+        window.statusBarColor = ContextCompat.getColor(this, R.color.green_theme_Light_taskbar)
+
         val group_logo = binding.grpLogo
         val group_name = binding.grpName
 
-
-        viewModel.groupInfo.observe(this){
+        viewModel.groupInfo.observe(this) {
             it.onSuccess {
                 group_name.text = it.name ?: "Unknown Group"
                 Log.d("grpname", "grpname: ${it.name}")
@@ -69,62 +75,65 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        viewPager=binding.viewPager
-        viewPager.adapter= FunctionalityPagerAdapter(this)
-        viewPager.currentItem=0
+        viewPager = binding.viewPager
+        viewPager.adapter = FunctionalityPagerAdapter(this)
+        viewPager.currentItem = 0
 
         handleKeyboardVisibility()
 
         binding.viewPager.setPageTransformer(null)
-        binding.viewPager.isUserInputEnabled=false
+        binding.viewPager.isUserInputEnabled = false
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 // Triggered when a new page becomes selected
-                when(position){
-                    0->{
+                when (position) {
+                    0 -> {
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplanneractive)
                         binding.imgChats.setImageResource(R.drawable.chatsnotactive)
                         binding.imgExpenses.setImageResource(R.drawable.expensenotactive)
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.bottomButtons.visibility = View.VISIBLE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
-                    1->{
+                    1 -> {
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplannernotactive)
                         binding.imgChats.setImageResource(R.drawable.chatsnotactive)
                         binding.imgExpenses.setImageResource(R.drawable.expensenotactive)
                         binding.imgMemories.setImageResource(R.drawable.memoriesactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.bottomButtons.visibility = View.VISIBLE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
-                    2->{
+                    2 -> {
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplannernotactive)
                         binding.imgChats.setImageResource(R.drawable.chatsnotactive)
                         binding.imgExpenses.setImageResource(R.drawable.expenseactive)
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.bottomButtons.visibility = View.VISIBLE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
-                    3->{
+                    3 -> {
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplannernotactive)
                         binding.imgChats.setImageResource(R.drawable.chatsactive)
                         binding.imgExpenses.setImageResource(R.drawable.expensenotactive)
@@ -133,25 +142,26 @@ class MainActivity : AppCompatActivity() {
 
                         binding.bottomButtons.visibility = View.GONE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                     }
-                    4->{
+                    4 -> {
                         binding.imgSmartRoute.setImageResource(R.drawable.smartplannernotactive)
                         binding.imgChats.setImageResource(R.drawable.chatsnotactive)
                         binding.imgExpenses.setImageResource(R.drawable.expensenotactive)
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsactive)
 
+                        binding.bottomButtons.visibility = View.VISIBLE
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
                     }
                 }
             }
@@ -190,6 +200,50 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                ),
+                LOCATION_PERMISSION_REQUEST_CODE
+            )
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            LOCATION_PERMISSION_REQUEST_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    Toast.makeText(this, "Location permission granted", Toast.LENGTH_SHORT).show()
+                    // Permission granted, fragments can now access location
+                } else {
+                    Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
+                    // Permission denied, inform user
+                }
+            }
+        }
+    }
+
+    // Method to check if location permission is granted (can be called by fragments)
+    fun isLocationPermissionGranted(): Boolean {
+        return ContextCompat.checkSelfPermission(
+            this,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+
     private fun redirectToActivity(activityClass: Class<*>) {
         val intent = Intent(this, activityClass)
         startActivity(intent)
@@ -212,9 +266,9 @@ class MainActivity : AppCompatActivity() {
                 bottomNav.visibility = View.GONE
             } else {
                 // Keyboard is closed
-                if(viewPager.currentItem!=3){
+                if (viewPager.currentItem != 3) {
                     bottomNav.visibility = View.VISIBLE
-                }else{
+                } else {
                     bottomNav.visibility = View.GONE
                 }
             }
@@ -222,19 +276,16 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        super.onBackPressed()
-        if(viewPager.currentItem==3){
-            viewPager.currentItem=0
-        }
-        else{
+        if (viewPager.currentItem == 3) {
+            viewPager.currentItem = 0
+        } else {
             redirectToActivity(GroupSelectorActivity::class.java)
         }
     }
 
     override fun onStop() {
         super.onStop()
-        Log.d("ChatDebug","socket disconnected")
+        Log.d("ChatDebug", "socket disconnected")
         SocketManager.disconnect()
     }
-
 }

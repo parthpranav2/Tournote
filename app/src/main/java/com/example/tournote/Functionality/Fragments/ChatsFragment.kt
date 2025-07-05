@@ -74,7 +74,7 @@ class ChatsFragment : Fragment() {
             val itemList = groupMessagesByDate(updated_msg)
             Log.d("ChatDebug","lets see:${messages}")
             chatAdapter.submitList(itemList) {
-                recyclerViewChat.scrollToPosition(messages.size - 1)
+                recyclerViewChat.scrollToPosition(chatAdapter.itemCount-1)
             }
         }
 

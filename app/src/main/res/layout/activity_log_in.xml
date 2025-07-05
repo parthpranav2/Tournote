@@ -203,6 +203,7 @@
                             android:layout_marginLeft="10dp"
                             android:textSize="18sp"
                             android:textStyle="bold"
+                            android:textColor="@color/black"
                             />
                     </LinearLayout>
                 </RelativeLayout>

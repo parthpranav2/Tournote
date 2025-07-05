@@ -91,4 +91,23 @@ dependencies {
         exclude(group = "org.json", module = "json")
     }
 
+// Add to build.gradle
+    implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
+    // for open street map
+    implementation("org.osmdroid:osmdroid-android:6.1.17")
+        // ... other dependencies
+
+    implementation("com.google.android.libraries.places:places:3.4.0")
+
+
+    // For OkHttp (simple HTTP client)
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+// Use the latest version
+// For Kotlin Coroutines (for debouncing search)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+// Use latest
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+// Use latest
+
 }
