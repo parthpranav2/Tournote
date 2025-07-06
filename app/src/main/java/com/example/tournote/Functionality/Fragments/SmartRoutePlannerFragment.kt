@@ -22,8 +22,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.tournote.Functionality.GeocodingResult
 import com.example.tournote.Functionality.GeocodingResultsAdapter
+import com.example.tournote.Functionality.GeocodingResultsDataClass
 import com.example.tournote.R
 import com.example.tournote.databinding.FragmentSmartRoutePlannerBinding
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -56,6 +56,12 @@ class SmartRoutePlannerFragment : Fragment() {
     var startLatitude: Double = 28.6139 // Default to New Delhi
     var startLongitude: Double = 77.2090
 
+    // Stop point properties
+    var stopName: String = "" // Default empty stop name
+    var stopLatitude: Double = 0.0
+    var stopLongitude: Double = 0.0
+    var hasStop: Boolean = false // Track if stop is added
+
     // Destination properties
     var destinationName: String = "Taloda" // Default to Taloda
     var destinationLatitude: Double = 21.5628
@@ -63,7 +69,7 @@ class SmartRoutePlannerFragment : Fragment() {
 
     // Search related
     private lateinit var geocodingResultsAdapter: GeocodingResultsAdapter
-    private val geocodingResultsList = mutableListOf<GeocodingResult>()
+    private val geocodingResultsList = mutableListOf<GeocodingResultsDataClass>()
     private val searchScope = CoroutineScope(Dispatchers.Main)
     private var searchJob: Job? = null
     private val httpClient = OkHttpClient()
@@ -72,7 +78,7 @@ class SmartRoutePlannerFragment : Fragment() {
     private var currentSearchTarget: SearchTarget = SearchTarget.NONE
 
     enum class SearchTarget {
-        NONE, START_POINT, END_POINT
+        NONE, START_POINT, END_POINT, STOPS
     }
 
     override fun onCreateView(
@@ -96,10 +102,6 @@ class SmartRoutePlannerFragment : Fragment() {
         // Setup button click listeners
         setupButtons()
 
-        // Initialize UI with default values
-        binding.txtStart.text = startName
-        //binding.txtDestination.text = destinationName
-
         return binding.root
     }
 
@@ -117,6 +119,27 @@ class SmartRoutePlannerFragment : Fragment() {
         binding.txtStart.text = name // Update the text view to show the current start point
     }
 
+    // Method to set the stop point
+    fun setStopPoint(name: String, latitude: Double, longitude: Double) {
+        stopName = name
+        stopLatitude = latitude
+        stopLongitude = longitude
+        hasStop = true
+        binding.txtStops.text = name // Update the text view to show the current stop point
+        binding.txtStops.visibility = View.VISIBLE // Make stop text visible
+        binding.btnRemoveStop.visibility = View.VISIBLE // Show remove stop button
+    }
+
+    // Method to remove the stop point
+    fun removeStopPoint() {
+        stopName = ""
+        stopLatitude = 0.0
+        stopLongitude = 0.0
+        hasStop = false
+        binding.txtStops.text = ""
+        binding.btnRemoveStop.visibility = View.GONE // Hide remove stop button
+    }
+
     // Method to set the end point (destination)
     fun setEndPoint(name: String, latitude: Double, longitude: Double) {
         destinationName = name
@@ -126,8 +149,35 @@ class SmartRoutePlannerFragment : Fragment() {
     }
 
     private fun setupButtons() {
-        // Create Route button - now uses stored start and end points
+        // Create Route button - now uses stored start, stop (if any), and end points
         binding.btnAddMarker.setOnClickListener { // Renamed from Add Marker conceptually
+            mediator_createRouteToDestination()
+        }
+
+        // Swap location details
+        binding.btnSwap.setOnClickListener {
+            // Store current start details in temporary variables
+            val tempStartName = startName
+            val tempStartLatitude = startLatitude
+            val tempStartLongitude = startLongitude
+
+            // Set start details to current destination details
+            setStartPoint(destinationName, destinationLatitude, destinationLongitude)
+
+            // Set destination details to the original start details (now in temporary variables)
+            setEndPoint(tempStartName, tempStartLatitude, tempStartLongitude)
+
+            // Optionally, re-create the route with the swapped points
+            mediator_createRouteToDestination()
+
+            showToast("Start and Destination swapped!")
+        }
+
+        // Remove stop button
+        binding.btnRemoveStop.setOnClickListener {
+            removeStopPoint()
+            showToast("Stop removed!")
+            // Recreate route without stop
             mediator_createRouteToDestination()
         }
 
@@ -145,8 +195,8 @@ class SmartRoutePlannerFragment : Fragment() {
 
         // Button to set start point to current location
         binding.btnCurrent.setOnClickListener {
-            binding.btnCurrent.visibility=View.GONE
-            binding.frmSearch.visibility=View.GONE
+            binding.btnCurrent.visibility = View.GONE
+            binding.frmSearch.visibility = View.GONE
 
             if (isLocationPermissionGranted()) {
                 try {
@@ -156,7 +206,6 @@ class SmartRoutePlannerFragment : Fragment() {
                             showToast("Start point set to Current Location.")
                         } else {
                             showToast("Current location not available. Please try again.")
-                            // Optionally, fall back to a default if truly no location is found
                         }
                     }.addOnFailureListener {
                         showToast("Failed to get current location: ${it.message}.")
@@ -175,23 +224,32 @@ class SmartRoutePlannerFragment : Fragment() {
                 )
             }
         }
-
-
     }
 
-
-    //call this each time when you want to refresh the locations
-    fun mediator_createRouteToDestination(){
+    // Call this each time when you want to refresh the locations
+    fun mediator_createRouteToDestination() {
         // Clear previous markers and route before adding new ones
         clearAllMarkers()
         clearAllRoutes()
 
-        // Create route from current location to destination
-        createRouteToDestination(startLatitude, startLongitude, destinationLatitude, destinationLongitude, startName, destinationName)
-        showToast("Route created from $startName to $destinationName!")
+        // Create route based on whether we have a stop or not
+        if (hasStop) {
+            createRouteWithStop(
+                startLatitude, startLongitude,
+                stopLatitude, stopLongitude,
+                destinationLatitude, destinationLongitude,
+                startName, stopName, destinationName
+            )
+            showToast("Route created from $startName to $destinationName via $stopName!")
+        } else {
+            createRouteToDestination(
+                startLatitude, startLongitude,
+                destinationLatitude, destinationLongitude,
+                startName, destinationName
+            )
+            showToast("Route created from $startName to $destinationName!")
+        }
     }
-
-
 
     private fun setupRecyclerView() {
         geocodingResultsAdapter = GeocodingResultsAdapter(geocodingResultsList) { result ->
@@ -202,6 +260,9 @@ class SmartRoutePlannerFragment : Fragment() {
                 }
                 SearchTarget.END_POINT -> {
                     setEndPoint(result.name, result.latitude, result.longitude)
+                }
+                SearchTarget.STOPS -> {
+                    setStopPoint(result.name, result.latitude, result.longitude)
                 }
                 SearchTarget.NONE -> {
                     // Should not happen if logic is correct
@@ -222,44 +283,39 @@ class SmartRoutePlannerFragment : Fragment() {
 
     private fun setupSearchAndRouteInputs() {
         // Listener for changes in destination text (to show/hide btnAddMarker)
-        binding.txtDestination.addTextChangedListener(object : TextWatcher{
+        binding.txtDestination.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                // Now also check txtStart for enabling route button
-                if(!binding.txtDestination.text.toString().isNullOrEmpty()){
+                // Show start button if destination is not empty
+                if (!binding.txtDestination.text.toString().isNullOrEmpty()) {
                     binding.btnStart.visibility = View.VISIBLE
                 } else {
                     binding.btnStart.visibility = View.GONE
                 }
+                updateRouteButtonsVisibility()
             }
         })
 
-        // Listener for changes in start text (to show/hide btnAddMarker)
+        // Listener for changes in start text (to show/hide buttons)
         binding.txtStart.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                if(!binding.txtDestination.text.toString().isNullOrEmpty() && !binding.txtStart.text.toString().isNullOrEmpty()){
-                    binding.btnAddMarker.visibility = View.VISIBLE
-                } else {
-                    binding.btnAddMarker.visibility = View.GONE
-                }
+                updateRouteButtonsVisibility()
             }
         })
 
-
         // When btnStart (the UI element for Start point) is clicked, open search for start point
         binding.btnStart.setOnClickListener {
-            binding.btnCurrent.visibility= View.VISIBLE
-
+            binding.btnCurrent.visibility = View.VISIBLE
             currentSearchTarget = SearchTarget.START_POINT
             binding.frmSearch.visibility = View.VISIBLE
             binding.txtSearch.requestFocus()
             showKeyboard(binding.txtSearch)
-            if(startName!="Your Current Location"){
+            if (startName != "Your Current Location") {
                 binding.txtSearch.setText(binding.txtStart.text) // Pre-fill with current start name
-            }else{
+            } else {
                 binding.txtSearch.setText("") // Pre-fill with current start name
             }
             binding.txtSearch.setSelection(binding.txtSearch.text.length)
@@ -267,13 +323,27 @@ class SmartRoutePlannerFragment : Fragment() {
 
         // When btnDestination (the UI element for Destination) is clicked, open search for end point
         binding.btnDestination.setOnClickListener {
-            binding.btnCurrent.visibility=View.GONE
-
+            binding.btnCurrent.visibility = View.GONE
             currentSearchTarget = SearchTarget.END_POINT
             binding.frmSearch.visibility = View.VISIBLE
             binding.txtSearch.requestFocus()
             showKeyboard(binding.txtSearch)
             binding.txtSearch.setText(binding.txtDestination.text) // Pre-fill with current destination name
+            binding.txtSearch.setSelection(binding.txtSearch.text.length)
+        }
+
+        // When btnStops is clicked, open search for stop point
+        binding.btnStops.setOnClickListener {
+            binding.btnCurrent.visibility = View.GONE
+            currentSearchTarget = SearchTarget.STOPS
+            binding.frmSearch.visibility = View.VISIBLE
+            binding.txtSearch.requestFocus()
+            showKeyboard(binding.txtSearch)
+            if (hasStop) {
+                binding.txtSearch.setText(binding.txtStops.text) // Pre-fill with current stop name
+            } else {
+                binding.txtSearch.setText("") // Empty for new stop
+            }
             binding.txtSearch.setSelection(binding.txtSearch.text.length)
         }
 
@@ -288,9 +358,7 @@ class SmartRoutePlannerFragment : Fragment() {
 
         binding.txtSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
-
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
-
             override fun afterTextChanged(s: Editable?) {
                 val query = s.toString().trim()
                 if (query.length > 2) { // Start search after 2 characters
@@ -318,6 +386,19 @@ class SmartRoutePlannerFragment : Fragment() {
             } else {
                 false
             }
+        }
+    }
+
+    // Helper method to update route buttons visibility
+    private fun updateRouteButtonsVisibility() {
+        if (!binding.txtDestination.text.toString().isNullOrEmpty() && !binding.txtStart.text.toString().isNullOrEmpty()) {
+            binding.btnAddMarker.visibility = View.VISIBLE
+            binding.btnSwap.visibility = View.VISIBLE
+            binding.btnStops.visibility = View.VISIBLE
+        } else {
+            binding.btnAddMarker.visibility = View.GONE
+            binding.btnSwap.visibility = View.GONE
+            binding.btnStops.visibility = View.GONE
         }
     }
 
@@ -352,14 +433,14 @@ class SmartRoutePlannerFragment : Fragment() {
                 response.body?.string()?.let { responseBody ->
                     try {
                         val jsonArray = JSONArray(responseBody)
-                        val results = mutableListOf<GeocodingResult>()
+                        val results = mutableListOf<GeocodingResultsDataClass>()
                         for (i in 0 until jsonArray.length()) {
                             val jsonObject = jsonArray.getJSONObject(i)
                             val name = jsonObject.optString("display_name")
                             val lat = jsonObject.optDouble("lat")
                             val lon = jsonObject.optDouble("lon")
                             if (name.isNotEmpty() && lat != 0.0 && lon != 0.0) {
-                                results.add(GeocodingResult(name, lat, lon))
+                                results.add(GeocodingResultsDataClass(name, lat, lon))
                             }
                         }
 
@@ -420,9 +501,6 @@ class SmartRoutePlannerFragment : Fragment() {
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                // Optionally, get current location and update map after page loads
-                // getCurrentLocation(); // Removed to avoid automatic location setting on map load for route planning
-                // Instead, the map will load centered on default coordinates
                 updateMapLocation(startLatitude, startLongitude) // Center map on initial start point
             }
 
@@ -444,7 +522,6 @@ class SmartRoutePlannerFragment : Fragment() {
         webView.loadUrl("file:///android_asset/leaflet_map.html")
     }
 
-    // This method is now primarily for initial map centering or for btnCurrent action
     private fun getCurrentLocation() {
         if (!isLocationPermissionGranted()) {
             requestPermissions(
@@ -464,7 +541,6 @@ class SmartRoutePlannerFragment : Fragment() {
         try {
             fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                 location?.let {
-                    // This updates the map's center, not necessarily the start point for routing
                     updateMapLocation(it.latitude, it.longitude)
                     showToast("Map centered on your current location.")
                 } ?: run {
@@ -527,6 +603,12 @@ class SmartRoutePlannerFragment : Fragment() {
         webView.evaluateJavascript(script, null)
     }
 
+    // New method to create route with one stop
+    fun createRouteWithStop(startLat: Double, startLng: Double, stopLat: Double, stopLng: Double, destLat: Double, destLng: Double, startName: String, stopName: String, destName: String) {
+        val script = "createRouteWithOneStop($startLat, $startLng, $stopLat, $stopLng, $destLat, $destLng, '$startName', '$stopName', '$destName');"
+        webView.evaluateJavascript(script, null)
+    }
+
     fun addRoute(waypoints: List<Pair<Double, Double>>) {
         val waypointsJson = waypoints.joinToString(",") { "[${it.first}, ${it.second}]" }
         val script = "addRoute([$waypointsJson]);"
@@ -559,12 +641,8 @@ class SmartRoutePlannerFragment : Fragment() {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     showToast("Location permission granted")
-                    // If the permission was requested because btnCurrent was pressed,
-                    // try to get the location again to set it as start point.
-                    if (currentSearchTarget == SearchTarget.START_POINT) { // This check might be too strict, consider if user opens search and then presses current
-                        getLastKnownLocation() // Only centers map
-                        // You might want to call a specific function here that re-attempts setting current location as start point
-                        // after permission is granted. For simplicity, I'm relying on the button click again.
+                    if (currentSearchTarget == SearchTarget.START_POINT) {
+                        getLastKnownLocation()
                     }
                 } else {
                     showToast("Location permission denied - using default map view")
@@ -600,6 +678,13 @@ class SmartRoutePlannerFragment : Fragment() {
         fun onRouteFound(distance: String, duration: String) {
             activity?.runOnUiThread {
                 showToast("Route found: $distance, $duration")
+            }
+        }
+
+        @android.webkit.JavascriptInterface
+        fun onRouteFoundWithStop(distance: String, duration: String) {
+            activity?.runOnUiThread {
+                showToast("Route with stop found: $distance, $duration")
             }
         }
 

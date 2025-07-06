@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Route Planner</title>
+    <title>Leaflet Route Planner - One Stop</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 
@@ -196,14 +196,17 @@
     className: 'custom-div-icon'
     });
 
+    const stopIcon = L.divIcon({
+    html: '<div style="background-color: #FF9800; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
+    iconSize: [20, 20],
+    className: 'custom-div-icon'
+    });
+
     const endIcon = L.divIcon({
     html: '<div style="background-color: #F44336; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
     iconSize: [20, 20],
     className: 'custom-div-icon'
     });
-
-    // REMOVED: L.Control.geocoder related code
-    // L.Control.geocoder({ ... }).on('markgeocode', function(e) { ... }).addTo(map);
 
     // Function to update location
     function updateLocation(lat, lng) {
@@ -244,7 +247,7 @@
     }
     }
 
-    // Function to create route using Leaflet Routing Machine
+    // Function to create route using Leaflet Routing Machine (original 2-point route)
     function createRoute(startLat, startLng, endLat, endLng, startName, endName) {
     // Clear existing route
     clearRoutes();
@@ -312,9 +315,86 @@
     }).addTo(map);
     }
 
+    // NEW: Function to create route with one stop (3-point route)
+    function createRouteWithOneStop(startLat, startLng, stopLat, stopLng, endLat, endLng, startName, stopName, endName) {
+    // Clear existing route
+    clearRoutes();
+
+    // Create route control with 3 waypoints
+    currentRoute = L.Routing.control({
+    waypoints: [
+    L.latLng(startLat, startLng),
+    L.latLng(stopLat, stopLng),
+    L.latLng(endLat, endLng)
+    ],
+    routeWhileDragging: false,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    createMarker: function(i, waypoint, n) {
+    // Create custom markers for start, stop, and end points
+    if (i === 0) {
+    return L.marker(waypoint.latLng, { icon: startIcon })
+    .bindPopup(startName || 'Start Point');
+    } else if (i === 1) {
+    return L.marker(waypoint.latLng, { icon: stopIcon })
+    .bindPopup(stopName || 'Stop Point');
+    } else if (i === n - 1) {
+    return L.marker(waypoint.latLng, { icon: endIcon })
+    .bindPopup(endName || 'End Point');
+    }
+    return L.marker(waypoint.latLng);
+    },
+    lineOptions: {
+    styles: [
+    {color: '#FFFFFF', weight: 8, opacity: 0.8}, // White border
+    {color: '#4285F4', weight: 6, opacity: 0.9} // Google Maps blue
+    ]
+    },
+    show: true,
+    showAlternatives: false,
+    fitSelectedRoutes: true,
+    collapsible: true,
+    collapsed: false,
+    autoRoute: true,
+    router: L.Routing.osrmv1({
+    serviceUrl: 'https://router.project-osrm.org/route/v1',
+    profile: 'driving'
+    })
+    }).on('routesfound', function(e) {
+    // Route found event
+    let routes = e.routes;
+    let summary = routes[0].summary;
+    let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
+    let duration = Math.round(summary.totalTime / 60) + ' min';
+
+    // Add custom collapse functionality
+    setTimeout(() => {
+    addCollapseButton();
+    }, 100);
+
+    // Notify Android app
+    if (typeof Android !== 'undefined') {
+    Android.onRouteFoundWithStop(distance, duration);
+    }
+
+    console.log('Route with stop found:', distance, duration);
+    }).on('routingerror', function(e) {
+    // Route error event
+    console.error('Routing error:', e.error);
+    if (typeof Android !== 'undefined') {
+    Android.onRouteError(e.error.message || 'Failed to find route');
+    }
+    }).addTo(map);
+    }
+
     // Function to create route to custom destination
     function createRouteToDestination(startLat, startLng, destLat, destLng, destName) {
     createRoute(startLat, startLng, destLat, destLng, 'Your Location', destName);
+    }
+
+    // NEW: Function to create route with stop to custom destination
+    function createRouteWithStopToDestination(startLat, startLng, stopLat, stopLng, destLat, destLng, stopName, destName) {
+    createRouteWithOneStop(startLat, startLng, stopLat, stopLng, destLat, destLng, 'Your Location', stopName, destName);
     }
 
     // Legacy function to add route (keeping for backward compatibility)
@@ -329,6 +409,19 @@
     routeWhileDragging: false,
     addWaypoints: false,
     draggableWaypoints: false,
+    createMarker: function(i, waypoint, n) {
+    // Create custom markers based on position
+    if (i === 0) {
+    return L.marker(waypoint.latLng, { icon: startIcon })
+    .bindPopup('Start Point');
+    } else if (i === n - 1) {
+    return L.marker(waypoint.latLng, { icon: endIcon })
+    .bindPopup('End Point');
+    } else {
+    return L.marker(waypoint.latLng, { icon: stopIcon })
+    .bindPopup('Stop Point');
+    }
+    },
     lineOptions: {
     styles: [
     {color: '#FFFFFF', weight: 8, opacity: 0.8}, // White border
@@ -448,4 +541,3 @@
 </script>
 </body>
 </html>
-

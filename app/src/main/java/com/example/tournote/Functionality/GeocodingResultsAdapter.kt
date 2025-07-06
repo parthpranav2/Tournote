@@ -8,8 +8,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.tournote.R
 
 class GeocodingResultsAdapter(
-    private val results: MutableList<GeocodingResult>,
-    private val onItemClick: (GeocodingResult) -> Unit
+    private val results: MutableList<GeocodingResultsDataClass>,
+    private val onItemClick: (GeocodingResultsDataClass) -> Unit
 ) : RecyclerView.Adapter<GeocodingResultsAdapter.ViewHolder>() {
 
     class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -32,7 +32,7 @@ class GeocodingResultsAdapter(
 
     override fun getItemCount(): Int = results.size
 
-    fun updateResults(newResults: List<GeocodingResult>) {
+    fun updateResults(newResults: List<GeocodingResultsDataClass>) {
         results.clear()
         results.addAll(newResults)
         notifyDataSetChanged()
