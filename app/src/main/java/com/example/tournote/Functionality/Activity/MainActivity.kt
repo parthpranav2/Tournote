@@ -171,11 +171,11 @@ class MainActivity : AppCompatActivity() {
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsactive)
 
 
-                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
-                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtExpenses.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtMemories.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
+                        binding.txtTrackGroupMates.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
                     }
                 }
             }

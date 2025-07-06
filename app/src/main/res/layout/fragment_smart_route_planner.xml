@@ -171,6 +171,7 @@
                         android:layout_margin="15dp"
                         />
                 </RelativeLayout>
+
                 <RelativeLayout
                     android:id="@+id/btnRemoveStop"
                     android:layout_width="wrap_content"
@@ -179,6 +180,7 @@
                     app:layout_constraintBottom_toTopOf="@id/btnSwap"
                     android:visibility="gone"
                     >
+
                     <ImageView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
@@ -216,21 +218,34 @@
             <androidx.recyclerview.widget.RecyclerView
                 android:id="@+id/rvFullRoute"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="175dp"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toEndOf="@id/btnBackToMap1"
                 app:layout_constraintEnd_toEndOf="parent"
-                android:layout_margin="10dp"
+                android:layout_margin="5dp"
                 tools:listitem="@layout/item_completeroute_recyclerview"
+                android:maxHeight="230dp"
+                />
+            <Button
+                android:id="@+id/btnAddStopInRoute"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                app:layout_constraintTop_toBottomOf="@id/rvFullRoute"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btnBackToMap1"
+                android:text="add stop"
+                android:layout_marginHorizontal="10dp"
+                android:layout_marginBottom="5dp"
                 />
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/rvFullRoute"
+                app:layout_constraintTop_toBottomOf="@id/btnAddStopInRoute"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintBottom_toBottomOf="parent"
+                android:visibility="gone"
                 >
                 <TextView
                     android:id="@+id/textView_total_trip_time"
@@ -242,19 +257,6 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     android:layout_margin="10dp"
                     android:text="Total trip : 19hr 21min"
-                    android:textSize="15sp"
-                    />
-                <TextView
-                    android:id="@+id/textView_finished_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/bluetext"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:layout_margin="10dp"
-                    android:text="Finished"
-                    android:textStyle="bold"
                     android:textSize="15sp"
                     />
             </androidx.constraintlayout.widget.ConstraintLayout>

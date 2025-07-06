@@ -3,169 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Route Planner - One Stop</title>
+    <title>Leaflet Route Planner - Multiple Stops with Labels</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
     <style>
         body {
-        margin: 0;
-        padding: 0;
-        font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
         }
 
         #map {
-        width: 100%;
-        height: 100vh;
+            width: 100%;
+            height: 100vh;
         }
 
         .route-info {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        background: white;
-        padding: 10px;
-        border-radius: 5px;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        z-index: 1000;
-        max-width: 200px;
-        font-size: 12px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
+            max-width: 200px;
+            font-size: 12px;
+        }
+
+        /* Custom marker styles */
+        .custom-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .start-marker {
+            background-color: #4CAF50;
+            width: 20px;
+            height: 20px;
+        }
+
+        .stop-marker {
+            background-color: #FF9800;
+            width: 20px;
+            height: 20px;
+        }
+
+        .end-marker {
+            background-color: #F44336;
+            width: 20px;
+            height: 20px;
         }
 
         /* Routing Container Styling */
         .leaflet-routing-container {
-        background: white;
-        border-radius: 10px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        border: 1px solid #e0e0e0;
-        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        max-width: 300px;
-        position: relative;
-        /* Positioning for the routing instructions, adjust as needed */
-        position: absolute;
-        top: 10px; /* Adjust top position */
-        left: 10px; /* Adjust left position */
-        z-index: 1000;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid #e0e0e0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 300px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
         }
 
-        /* Header styling */
         .leaflet-routing-container h2 {
-        font-size: 16px;
-        margin: 0 0 10px 0;
-        color: #1976D2;
-        font-weight: 600;
-        padding: 12px 15px 0 15px;
-        border-bottom: 1px solid #f0f0f0;
-        padding-bottom: 8px;
+            font-size: 16px;
+            margin: 0 0 10px 0;
+            color: #1976D2;
+            font-weight: 600;
+            padding: 12px 15px 0 15px;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 8px;
         }
 
-        /* Route summary styling */
         .leaflet-routing-container h3 {
-        font-size: 14px;
-        margin: 8px 0;
-        color: #4285F4;
-        font-weight: 500;
-        padding: 0 15px;
-        background: #f8f9fa;
-        padding: 8px 15px;
-        margin: 0;
-        border-radius: 6px;
-        margin: 8px 12px;
+            font-size: 14px;
+            margin: 8px 0;
+            color: #4285F4;
+            font-weight: 500;
+            padding: 0 15px;
+            background: #f8f9fa;
+            padding: 8px 15px;
+            margin: 0;
+            border-radius: 6px;
+            margin: 8px 12px;
         }
 
-        /* Collapse/Expand button */
         .leaflet-routing-container .leaflet-routing-collapse-btn {
-        background: #4285F4;
-        color: white;
-        border: none;
-        border-radius: 50%;
-        width: 30px;
-        height: 30px;
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        z-index: 1000;
+            background: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            z-index: 1000;
         }
 
         .leaflet-routing-container .leaflet-routing-collapse-btn:hover {
-        background: #1976D2;
+            background: #1976D2;
         }
 
-        /* Individual route instruction styling */
         .leaflet-routing-container .leaflet-routing-instruction {
-        padding: 8px 15px;
-        border-bottom: 1px solid #f5f5f5;
-        font-size: 13px;
-        color: #333;
-        line-height: 1.4;
+            padding: 8px 15px;
+            border-bottom: 1px solid #f5f5f5;
+            font-size: 13px;
+            color: #333;
+            line-height: 1.4;
         }
 
         .leaflet-routing-container .leaflet-routing-instruction:hover {
-        background: #f8f9fa;
+            background: #f8f9fa;
         }
 
         .leaflet-routing-container .leaflet-routing-instruction:last-child {
-        border-bottom: none;
+            border-bottom: none;
         }
 
-        /* Distance and time styling */
         .leaflet-routing-container .leaflet-routing-instruction-distance {
-        color: #666;
-        font-size: 11px;
-        font-weight: 500;
+            color: #666;
+            font-size: 11px;
+            font-weight: 500;
         }
 
-        /* Alternative routes styling */
         .leaflet-routing-container .leaflet-routing-alt {
-        background: #fff3cd;
-        border: 1px solid #ffeaa7;
-        border-radius: 6px;
-        margin: 8px 12px;
-        padding: 8px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 6px;
+            margin: 8px 12px;
+            padding: 8px;
         }
 
-        /* Scrollable directions */
         .leaflet-routing-container .leaflet-routing-instructions {
-        max-height: 200px;
-        overflow-y: auto;
-        border-radius: 0 0 10px 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            border-radius: 0 0 10px 10px;
         }
 
-        /* Custom scrollbar */
         .leaflet-routing-container .leaflet-routing-instructions::-webkit-scrollbar {
-        width: 6px;
+            width: 6px;
         }
 
         .leaflet-routing-container .leaflet-routing-instructions::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 3px;
+            background: #f1f1f1;
+            border-radius: 3px;
         }
 
         .leaflet-routing-container .leaflet-routing-instructions::-webkit-scrollbar-thumb {
-        background: #4285F4;
-        border-radius: 3px;
+            background: #4285F4;
+            border-radius: 3px;
         }
 
         .leaflet-routing-container .leaflet-routing-instructions::-webkit-scrollbar-thumb:hover {
-        background: #1976D2;
+            background: #1976D2;
         }
 
-        /* Hide/Show animation */
         .leaflet-routing-container.collapsed {
-        height: 60px;
-        overflow: hidden;
+            height: 60px;
+            overflow: hidden;
         }
 
         .leaflet-routing-container.collapsed .leaflet-routing-instructions {
-        display: none;
+            display: none;
         }
     </style>
 </head>
@@ -173,370 +193,472 @@
 <div id="map"></div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 
 <script>
-    // Initialize the map with default location (can be updated)
-    let map = L.map('map').setView([28.6139, 77.2090], 10); // Default to New Delhi
+    // Initialize the map with default location
+    let map = L.map('map', { zoomControl: false }).setView([28.6139, 77.2090], 10);
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
+        attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     // Store markers and routes
     let markers = [];
     let currentRoute = null;
 
-    // Custom marker icons
-    const startIcon = L.divIcon({
-    html: '<div style="background-color: #4CAF50; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-    iconSize: [20, 20],
-    className: 'custom-div-icon'
-    });
+    // Function to create custom marker with label
+    function createCustomMarker(type, label = '') {
+        let className = 'custom-marker ';
+        let content = label;
 
-    const stopIcon = L.divIcon({
-    html: '<div style="background-color: #FF9800; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-    iconSize: [20, 20],
-    className: 'custom-div-icon'
-    });
+        switch(type) {
+            case 'start':
+                className += 'start-marker';
+                content = ''; // Start point has no label
+                break;
+            case 'stop':
+                className += 'stop-marker';
+                break;
+            case 'end':
+                className += 'end-marker';
+                content = 'E'; // End point has 'E' label
+                break;
+        }
 
-    const endIcon = L.divIcon({
-    html: '<div style="background-color: #F44336; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>',
-    iconSize: [20, 20],
-    className: 'custom-div-icon'
-    });
+        return L.divIcon({
+            html: `<div class="${className}">${content}</div>`,
+            iconSize: [20, 20],
+            className: 'custom-div-icon'
+        });
+    }
+
+    // Function to calculate stop index (similar to Android adapter)
+    function getStopIndex(position, waypoints) {
+        let stopCount = 0;
+        for (let i = 0; i < position; i++) {
+            if (i !== 0 && i !== waypoints.length - 1) {
+                stopCount++;
+            }
+        }
+        return stopCount;
+    }
+
+    // Function to get alphabetical label for stops
+    function getStopLabel(stopIndex) {
+        return String.fromCharCode(65 + stopIndex); // A, B, C, etc.
+    }
 
     // Function to update location
     function updateLocation(lat, lng) {
-    map.setView([lat, lng], 13);
+        map.setView([lat, lng], 13);
     }
 
     // Function to add marker
     function addMarker(lat, lng, popup) {
-    let marker = L.marker([lat, lng]).addTo(map);
-    if (popup) {
-    marker.bindPopup(popup);
-    }
+        let marker = L.marker([lat, lng]).addTo(map);
+        if (popup) {
+            marker.bindPopup(popup);
+        }
 
-    // Add click event to marker
-    marker.on('click', function() {
-    if (typeof Android !== 'undefined') {
-    Android.onMarkerClick(lat, lng, popup || 'Marker');
-    }
-    });
+        marker.on('click', function() {
+            if (typeof Android !== 'undefined') {
+                Android.onMarkerClick(lat, lng, popup || 'Marker');
+            }
+        });
 
-    markers.push(marker);
-    return marker;
+        markers.push(marker);
+        return marker;
     }
 
     // Function to clear all markers
     function clearMarkers() {
-    markers.forEach(marker => {
-    map.removeLayer(marker);
-    });
-    markers = [];
+        markers.forEach(marker => {
+            map.removeLayer(marker);
+        });
+        markers = [];
     }
 
     // Function to clear all routes
     function clearRoutes() {
-    if (currentRoute) {
-    map.removeControl(currentRoute);
-    currentRoute = null;
-    }
+        if (currentRoute) {
+            map.removeControl(currentRoute);
+            currentRoute = null;
+        }
     }
 
     // Function to create route using Leaflet Routing Machine (original 2-point route)
     function createRoute(startLat, startLng, endLat, endLng, startName, endName) {
-    // Clear existing route
-    clearRoutes();
+        clearRoutes();
 
-    // Create route control
-    currentRoute = L.Routing.control({
-    waypoints: [
-    L.latLng(startLat, startLng),
-    L.latLng(endLat, endLng)
-    ],
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    createMarker: function(i, waypoint, n) {
-    // Create custom markers for start and end points
-    if (i === 0) {
-    return L.marker(waypoint.latLng, { icon: startIcon })
-    .bindPopup(startName || 'Start Point');
-    } else if (i === n - 1) {
-    return L.marker(waypoint.latLng, { icon: endIcon })
-    .bindPopup(endName || 'End Point');
-    }
-    return L.marker(waypoint.latLng);
-    },
-    lineOptions: {
-    styles: [
-    {color: '#FFFFFF', weight: 8, opacity: 0.8}, // White border
-    {color: '#4285F4', weight: 6, opacity: 0.9} // Google Maps blue
-    ]
-    },
-    show: true,
-    showAlternatives: false,
-    fitSelectedRoutes: true,
-    collapsible: true,
-    collapsed: false,
-    autoRoute: true,
-    router: L.Routing.osrmv1({
-    serviceUrl: 'https://router.project-osrm.org/route/v1',
-    profile: 'driving'
-    })
-    }).on('routesfound', function(e) {
-    // Route found event
-    let routes = e.routes;
-    let summary = routes[0].summary;
-    let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
-    let duration = Math.round(summary.totalTime / 60) + ' min';
+        currentRoute = L.Routing.control({
+            waypoints: [
+                L.latLng(startLat, startLng),
+                L.latLng(endLat, endLng)
+            ],
+            routeWhileDragging: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            createMarker: function(i, waypoint, n) {
+                if (i === 0) {
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('start') })
+                        .bindPopup(startName || 'Start Point');
+                } else if (i === n - 1) {
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('end') })
+                        .bindPopup(endName || 'End Point');
+                }
+                return L.marker(waypoint.latLng);
+            },
+            lineOptions: {
+                styles: [
+                    {color: '#FFFFFF', weight: 8, opacity: 0.8},
+                    {color: '#4285F4', weight: 6, opacity: 0.9}
+                ]
+            },
+            show: true,
+            showAlternatives: false,
+            fitSelectedRoutes: true,
+            collapsible: true,
+            collapsed: false,
+            autoRoute: true,
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                profile: 'driving'
+            })
+        }).on('routesfound', function(e) {
+            let routes = e.routes;
+            let summary = routes[0].summary;
+            let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
+            let duration = Math.round(summary.totalTime / 60) + ' min';
 
-    // Add custom collapse functionality
-    setTimeout(() => {
-    addCollapseButton();
-    }, 100);
+            setTimeout(() => {
+                addCollapseButton();
+            }, 100);
 
-    // Notify Android app
-    if (typeof Android !== 'undefined') {
-    Android.onRouteFound(distance, duration);
-    }
+            if (typeof Android !== 'undefined') {
+                Android.onRouteFound(distance, duration);
+            }
 
-    console.log('Route found:', distance, duration);
-    }).on('routingerror', function(e) {
-    // Route error event
-    console.error('Routing error:', e.error);
-    if (typeof Android !== 'undefined') {
-    Android.onRouteError(e.error.message || 'Failed to find route');
-    }
-    }).addTo(map);
+            console.log('Route found:', distance, duration);
+        }).on('routingerror', function(e) {
+            console.error('Routing error:', e.error);
+            if (typeof Android !== 'undefined') {
+                Android.onRouteError(e.error.message || 'Failed to find route');
+            }
+        }).addTo(map);
     }
 
-    // NEW: Function to create route with one stop (3-point route)
+    // Function to create route with one stop (3-point route)
     function createRouteWithOneStop(startLat, startLng, stopLat, stopLng, endLat, endLng, startName, stopName, endName) {
-    // Clear existing route
-    clearRoutes();
+        clearRoutes();
 
-    // Create route control with 3 waypoints
-    currentRoute = L.Routing.control({
-    waypoints: [
-    L.latLng(startLat, startLng),
-    L.latLng(stopLat, stopLng),
-    L.latLng(endLat, endLng)
-    ],
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    createMarker: function(i, waypoint, n) {
-    // Create custom markers for start, stop, and end points
-    if (i === 0) {
-    return L.marker(waypoint.latLng, { icon: startIcon })
-    .bindPopup(startName || 'Start Point');
-    } else if (i === 1) {
-    return L.marker(waypoint.latLng, { icon: stopIcon })
-    .bindPopup(stopName || 'Stop Point');
-    } else if (i === n - 1) {
-    return L.marker(waypoint.latLng, { icon: endIcon })
-    .bindPopup(endName || 'End Point');
+        currentRoute = L.Routing.control({
+            waypoints: [
+                L.latLng(startLat, startLng),
+                L.latLng(stopLat, stopLng),
+                L.latLng(endLat, endLng)
+            ],
+            routeWhileDragging: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            createMarker: function(i, waypoint, n) {
+                if (i === 0) {
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('start') })
+                        .bindPopup(startName || 'Start Point');
+                } else if (i === 1) {
+                    // First stop gets label 'A'
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('stop', 'A') })
+                        .bindPopup(stopName || 'Stop A');
+                } else if (i === n - 1) {
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('end') })
+                        .bindPopup(endName || 'End Point');
+                }
+                return L.marker(waypoint.latLng);
+            },
+            lineOptions: {
+                styles: [
+                    {color: '#FFFFFF', weight: 8, opacity: 0.8},
+                    {color: '#4285F4', weight: 6, opacity: 0.9}
+                ]
+            },
+            show: true,
+            showAlternatives: false,
+            fitSelectedRoutes: true,
+            collapsible: true,
+            collapsed: false,
+            autoRoute: true,
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                profile: 'driving'
+            })
+        }).on('routesfound', function(e) {
+            let routes = e.routes;
+            let summary = routes[0].summary;
+            let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
+            let duration = Math.round(summary.totalTime / 60) + ' min';
+
+            setTimeout(() => {
+                addCollapseButton();
+            }, 100);
+
+            if (typeof Android !== 'undefined') {
+                Android.onRouteFoundWithStop(distance, duration);
+            }
+
+            console.log('Route with stop found:', distance, duration);
+        }).on('routingerror', function(e) {
+            console.error('Routing error:', e.error);
+            if (typeof Android !== 'undefined') {
+                Android.onRouteError(e.error.message || 'Failed to find route');
+            }
+        }).addTo(map);
     }
-    return L.marker(waypoint.latLng);
-    },
-    lineOptions: {
-    styles: [
-    {color: '#FFFFFF', weight: 8, opacity: 0.8}, // White border
-    {color: '#4285F4', weight: 6, opacity: 0.9} // Google Maps blue
-    ]
-    },
-    show: true,
-    showAlternatives: false,
-    fitSelectedRoutes: true,
-    collapsible: true,
-    collapsed: false,
-    autoRoute: true,
-    router: L.Routing.osrmv1({
-    serviceUrl: 'https://router.project-osrm.org/route/v1',
-    profile: 'driving'
-    })
-    }).on('routesfound', function(e) {
-    // Route found event
-    let routes = e.routes;
-    let summary = routes[0].summary;
-    let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
-    let duration = Math.round(summary.totalTime / 60) + ' min';
 
-    // Add custom collapse functionality
-    setTimeout(() => {
-    addCollapseButton();
-    }, 100);
+    // Function to create route with multiple stops
+    function createRouteWithMultipleStops(waypoints, waypointNames) {
+        clearRoutes();
 
-    // Notify Android app
-    if (typeof Android !== 'undefined') {
-    Android.onRouteFoundWithStop(distance, duration);
-    }
+        let leafletWaypoints = waypoints.map(wp => L.latLng(wp.lat || wp[0], wp.lng || wp[1]));
 
-    console.log('Route with stop found:', distance, duration);
-    }).on('routingerror', function(e) {
-    // Route error event
-    console.error('Routing error:', e.error);
-    if (typeof Android !== 'undefined') {
-    Android.onRouteError(e.error.message || 'Failed to find route');
-    }
-    }).addTo(map);
+        currentRoute = L.Routing.control({
+            waypoints: leafletWaypoints,
+            routeWhileDragging: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            createMarker: function(i, waypoint, n) {
+                let name = waypointNames && waypointNames[i] ? waypointNames[i] : null;
+
+                if (i === 0) {
+                    // Start point
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('start') })
+                        .bindPopup(name || 'Start Point');
+                } else if (i === n - 1) {
+                    // End point
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('end') })
+                        .bindPopup(name || 'End Point');
+                } else {
+                    // Stop points - calculate alphabetical label
+                    let stopIndex = getStopIndex(i, leafletWaypoints);
+                    let stopLabel = getStopLabel(stopIndex);
+                    return L.marker(waypoint.latLng, { icon: createCustomMarker('stop', stopLabel) })
+                        .bindPopup(name || `Stop ${stopLabel}`);
+                }
+            },
+            lineOptions: {
+                styles: [
+                    {color: '#FFFFFF', weight: 8, opacity: 0.8},
+                    {color: '#4285F4', weight: 6, opacity: 0.9}
+                ]
+            },
+            show: true,
+            showAlternatives: false,
+            fitSelectedRoutes: true,
+            collapsible: true,
+            collapsed: false,
+            autoRoute: true,
+            router: L.Routing.osrmv1({
+                serviceUrl: 'https://router.project-osrm.org/route/v1',
+                profile: 'driving'
+            })
+        }).on('routesfound', function(e) {
+            let routes = e.routes;
+            let summary = routes[0].summary;
+            let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
+            let duration = Math.round(summary.totalTime / 60) + ' min';
+
+            setTimeout(() => {
+                addCollapseButton();
+            }, 100);
+
+            if (typeof Android !== 'undefined') {
+                Android.onRouteFoundWithMultipleStops(distance, duration, waypoints.length);
+            }
+
+            console.log('Route with multiple stops found:', distance, duration);
+        }).on('routingerror', function(e) {
+            console.error('Routing error:', e.error);
+            if (typeof Android !== 'undefined') {
+                Android.onRouteError(e.error.message || 'Failed to find route');
+            }
+        }).addTo(map);
     }
 
     // Function to create route to custom destination
     function createRouteToDestination(startLat, startLng, destLat, destLng, destName) {
-    createRoute(startLat, startLng, destLat, destLng, 'Your Location', destName);
+        createRoute(startLat, startLng, destLat, destLng, 'Your Location', destName);
     }
 
-    // NEW: Function to create route with stop to custom destination
+    // Function to create route with stop to custom destination
     function createRouteWithStopToDestination(startLat, startLng, stopLat, stopLng, destLat, destLng, stopName, destName) {
-    createRouteWithOneStop(startLat, startLng, stopLat, stopLng, destLat, destLng, 'Your Location', stopName, destName);
+        createRouteWithOneStop(startLat, startLng, stopLat, stopLng, destLat, destLng, 'Your Location', stopName, destName);
+    }
+
+    // Function to create route with multiple stops to custom destination
+    function createRouteWithMultipleStopsToDestination(startLat, startLng, stops, destLat, destLng, destName) {
+        let waypoints = [
+            { lat: startLat, lng: startLng }
+        ];
+
+        stops.forEach(stop => {
+            waypoints.push({
+                lat: stop.lat || stop[0],
+                lng: stop.lng || stop[1]
+            });
+        });
+
+        waypoints.push({ lat: destLat, lng: destLng });
+
+        let names = ['Your Location'];
+        stops.forEach((stop, index) => {
+            names.push(stop.name || `Stop ${getStopLabel(index)}`);
+        });
+        names.push(destName);
+
+        createRouteWithMultipleStops(waypoints, names);
     }
 
     // Legacy function to add route (keeping for backward compatibility)
     function addRoute(waypoints) {
-    clearRoutes();
+        clearRoutes();
 
-    if (waypoints.length >= 2) {
-    let leafletWaypoints = waypoints.map(wp => L.latLng(wp[0], wp[1]));
+        if (waypoints.length >= 2) {
+            let leafletWaypoints = waypoints.map(wp => L.latLng(wp[0], wp[1]));
 
-    currentRoute = L.Routing.control({
-    waypoints: leafletWaypoints,
-    routeWhileDragging: false,
-    addWaypoints: false,
-    draggableWaypoints: false,
-    createMarker: function(i, waypoint, n) {
-    // Create custom markers based on position
-    if (i === 0) {
-    return L.marker(waypoint.latLng, { icon: startIcon })
-    .bindPopup('Start Point');
-    } else if (i === n - 1) {
-    return L.marker(waypoint.latLng, { icon: endIcon })
-    .bindPopup('End Point');
-    } else {
-    return L.marker(waypoint.latLng, { icon: stopIcon })
-    .bindPopup('Stop Point');
-    }
-    },
-    lineOptions: {
-    styles: [
-    {color: '#FFFFFF', weight: 8, opacity: 0.8}, // White border
-    {color: '#4285F4', weight: 6, opacity: 0.9} // Google Maps blue
-    ]
-    },
-    show: true,
-    showAlternatives: false,
-    fitSelectedRoutes: true
-    }).addTo(map);
-    }
+            currentRoute = L.Routing.control({
+                waypoints: leafletWaypoints,
+                routeWhileDragging: false,
+                addWaypoints: false,
+                draggableWaypoints: false,
+                createMarker: function(i, waypoint, n) {
+                    if (i === 0) {
+                        return L.marker(waypoint.latLng, { icon: createCustomMarker('start') })
+                            .bindPopup('Start Point');
+                    } else if (i === n - 1) {
+                        return L.marker(waypoint.latLng, { icon: createCustomMarker('end') })
+                            .bindPopup('End Point');
+                    } else {
+                        let stopIndex = getStopIndex(i, leafletWaypoints);
+                        let stopLabel = getStopLabel(stopIndex);
+                        return L.marker(waypoint.latLng, { icon: createCustomMarker('stop', stopLabel) })
+                            .bindPopup(`Stop ${stopLabel}`);
+                    }
+                },
+                lineOptions: {
+                    styles: [
+                        {color: '#FFFFFF', weight: 8, opacity: 0.8},
+                        {color: '#4285F4', weight: 6, opacity: 0.9}
+                    ]
+                },
+                show: true,
+                showAlternatives: false,
+                fitSelectedRoutes: true
+            }).addTo(map);
+        }
     }
 
     // Map click event
     map.on('click', function(e) {
-    let lat = e.latlng.lat;
-    let lng = e.latlng.lng;
+        let lat = e.latlng.lat;
+        let lng = e.latlng.lng;
 
-    if (typeof Android !== 'undefined') {
-    Android.onMapClick(lat, lng);
-    }
+        if (typeof Android !== 'undefined') {
+            Android.onMapClick(lat, lng);
+        }
     });
 
     // Function to add custom collapse button
     function addCollapseButton() {
-    const container = document.querySelector('.leaflet-routing-container');
-    if (container && !container.querySelector('.custom-collapse-btn')) {
-    const collapseBtn = document.createElement('button');
-    collapseBtn.className = 'custom-collapse-btn';
-    collapseBtn.innerHTML = '−';
-    collapseBtn.title = 'Collapse directions';
-    collapseBtn.style.cssText = `
-    background: #4285F4;
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 28px;
-    height: 28px;
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 16px;
-    font-weight: bold;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    z-index: 1000;
-    `;
+        const container = document.querySelector('.leaflet-routing-container');
+        if (container && !container.querySelector('.custom-collapse-btn')) {
+            const collapseBtn = document.createElement('button');
+            collapseBtn.className = 'custom-collapse-btn';
+            collapseBtn.innerHTML = '−';
+            collapseBtn.title = 'Collapse directions';
+            collapseBtn.style.cssText = `
+                background: #4285F4;
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 28px;
+                height: 28px;
+                position: absolute;
+                top: 8px;
+                right: 8px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 16px;
+                font-weight: bold;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                z-index: 1000;
+            `;
 
-    let isCollapsed = false;
-    collapseBtn.addEventListener('click', function() {
-    const instructions = container.querySelector('.leaflet-routing-instructions');
-    if (instructions) {
-    if (isCollapsed) {
-    instructions.style.display = 'block';
-    container.style.height = 'auto';
-    collapseBtn.innerHTML = '−';
-    collapseBtn.title = 'Collapse directions';
-    } else {
-    instructions.style.display = 'none';
-    container.style.height = '50px';
-    collapseBtn.innerHTML = '+';
-    collapseBtn.title = 'Expand directions';
-    }
-    isCollapsed = !isCollapsed;
-    }
-    });
+            let isCollapsed = false;
+            collapseBtn.addEventListener('click', function() {
+                const instructions = container.querySelector('.leaflet-routing-instructions');
+                if (instructions) {
+                    if (isCollapsed) {
+                        instructions.style.display = 'block';
+                        container.style.height = 'auto';
+                        collapseBtn.innerHTML = '−';
+                        collapseBtn.title = 'Collapse directions';
+                    } else {
+                        instructions.style.display = 'none';
+                        container.style.height = '50px';
+                        collapseBtn.innerHTML = '+';
+                        collapseBtn.title = 'Expand directions';
+                    }
+                    isCollapsed = !isCollapsed;
+                }
+            });
 
-    container.appendChild(collapseBtn);
-    }
+            container.appendChild(collapseBtn);
+        }
     }
 
     // Function to hide directions panel completely
     function hideDirections() {
-    const container = document.querySelector('.leaflet-routing-container');
-    if (container) {
-    container.style.display = 'none';
-    }
+        const container = document.querySelector('.leaflet-routing-container');
+        if (container) {
+            container.style.display = 'none';
+        }
     }
 
     // Function to show directions panel
     function showDirections() {
-    const container = document.querySelector('.leaflet-routing-container');
-    if (container) {
-    container.style.display = 'block';
-    }
+        const container = document.querySelector('.leaflet-routing-container');
+        if (container) {
+            container.style.display = 'block';
+        }
     }
 
     // Function to minimize directions (show only summary)
     function minimizeDirections() {
-    const container = document.querySelector('.leaflet-routing-container');
-    const instructions = container?.querySelector('.leaflet-routing-instructions');
-    if (instructions) {
-    instructions.style.display = 'none';
-    container.style.height = '60px';
-    }
+        const container = document.querySelector('.leaflet-routing-container');
+        const instructions = container?.querySelector('.leaflet-routing-instructions');
+        if (instructions) {
+            instructions.style.display = 'none';
+            container.style.height = '60px';
+        }
     }
 
-    // Show toast function (can be called from JavaScript)
+    // Show toast function
     function showToast(message) {
-    if (typeof Android !== 'undefined') {
-    Android.showToast(message);
-    } else {
-    console.log('Toast:', message);
-    }
+        if (typeof Android !== 'undefined') {
+            Android.showToast(message);
+        } else {
+            console.log('Toast:', message);
+        }
     }
 
     // Initialize map on load
     document.addEventListener('DOMContentLoaded', function() {
-    console.log('Map initialized');
-    if (typeof Android !== 'undefined') {
-    Android.showToast('Map loaded successfully');
-    }
+        console.log('Map initialized');
+        if (typeof Android !== 'undefined') {
+            Android.showToast('Map loaded successfully');
+        }
     });
 </script>
 </body>

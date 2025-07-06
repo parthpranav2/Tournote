@@ -15,13 +15,14 @@
         <!--label-->
         <RelativeLayout
             android:id="@+id/label"
-            android:layout_width="wrap_content"
+            android:layout_width="30dp"
             android:layout_height="0dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
             >
             <ImageView
+                android:id="@+id/imglabel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:src="@drawable/circleforlabel_notstartpoint"
@@ -57,7 +58,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:background="@drawable/textbox_completeroute_recyclerview"
-                android:paddingLeft="15dp"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
                 android:hint="Add Stop"
                 android:textSize="18sp"
                 android:textColorHint="@color/white"
@@ -75,7 +77,8 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginLeft="15dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="5dp"
             >
             <ImageView
                 android:layout_width="wrap_content"
