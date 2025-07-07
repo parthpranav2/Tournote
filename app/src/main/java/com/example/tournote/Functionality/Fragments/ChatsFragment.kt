@@ -250,8 +250,8 @@ class ChatsFragment : Fragment(), MenuActionHandler {
                 if (userID != null) {
                     val user_data = authViewmodel.repo.userDetailGetLogin(userID)
                     if (user_data != null && GlobalClass.group_id != null) {
-                        val user_name = user_data.get("name").toString()
-                        val profile_url: String? = user_data.get("profilePic").toString()
+                        val user_name = user_data.child("name").value.toString()
+                        val profile_url: String? = user_data.child("profilePic").value.toString()
                         val group_id = GlobalClass.group_id
                         val msg_id = chatViewModel.generateShortMessageId()
                         val msg = ChatMessage(

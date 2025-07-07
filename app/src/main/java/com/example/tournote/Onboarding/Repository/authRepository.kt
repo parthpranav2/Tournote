@@ -10,6 +10,8 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.database
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,8 @@ import kotlinx.coroutines.withContext
 class authRepository {
     val firebaseAuth = FirebaseAuth.getInstance()
     val db = Firebase.firestore
+    val realDB = Firebase.database
+
 
     suspend fun custom_login(email: String, pass: String): Result<AuthResult> {
         return try {
@@ -83,7 +87,7 @@ class authRepository {
 
     suspend fun userDetailsToFirestore(userId: String, userMap: Map<String, Any>):Result<Any> {
         return try {
-            val result= db.collection("users").document(userId).set(userMap).await()
+            val result= realDB.getReference("users").child(userId).setValue(userMap).await()
             Result.success(result)
         } catch (e: Exception) {
             Log.e("authRepository", "Error saving user details: ${e.message}")
@@ -91,15 +95,20 @@ class authRepository {
         }
     }
 
-    suspend fun userDetailGetLogin(userId: String): DocumentSnapshot? {
-        try {
-            val data = db.collection("users").document(userId).get().await()
-            return data
-        }catch (e: Exception) {
-            return null
+    suspend fun userDetailGetLogin(userId: String): DataSnapshot? {
+        return try {
+            val snapshot = realDB
+                .getReference("users")
+                .child(userId)
+                .get()
+                .await()
+            snapshot
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
         }
-
     }
+
 
 
     suspend fun changePassword(oldPass: String, newPass: String): Result<Any> {
