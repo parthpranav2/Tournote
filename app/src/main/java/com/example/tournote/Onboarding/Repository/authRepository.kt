@@ -87,7 +87,7 @@ class authRepository {
 
     suspend fun userDetailsToFirestore(userId: String, userMap: Map<String, Any>):Result<Any> {
         return try {
-            val result= realDB.getReference("users").child(userId).setValue(userMap).await()
+            val result= realDB.getReference("users").child(userId).child("PersonalDetails").setValue(userMap).await()
             Result.success(result)
         } catch (e: Exception) {
             Log.e("authRepository", "Error saving user details: ${e.message}")
@@ -100,6 +100,7 @@ class authRepository {
             val snapshot = realDB
                 .getReference("users")
                 .child(userId)
+                .child("PersonalDetails")
                 .get()
                 .await()
             snapshot

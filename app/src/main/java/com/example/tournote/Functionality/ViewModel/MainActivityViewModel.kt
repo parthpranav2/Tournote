@@ -4,12 +4,12 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tournote.Functionality.Repository.ChatRepository
+import com.example.tournote.Functionality.Segments.ChatRoom.Repository.ChatRepository
+import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupInfoModel
+import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 
 class MainActivityViewModel: ViewModel() {
 

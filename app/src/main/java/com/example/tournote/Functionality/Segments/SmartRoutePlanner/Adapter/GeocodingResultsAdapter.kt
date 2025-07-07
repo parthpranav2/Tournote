@@ -1,10 +1,11 @@
-package com.example.tournote.Functionality
+package com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter
 
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.DataClass.GeocodingResultsDataClass
 import com.example.tournote.R
 
 class GeocodingResultsAdapter(

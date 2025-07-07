@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality
+package com.example.tournote.Functionality.Segments.ChatRoom.Object
 
 import android.util.Log
 import io.socket.client.Ack

@@ -1,7 +1,7 @@
 package com.example.tournote.Functionality.Repository
 
 import androidx.lifecycle.LiveData
-import com.example.tournote.GroupInfoModel
+import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.tasks.await

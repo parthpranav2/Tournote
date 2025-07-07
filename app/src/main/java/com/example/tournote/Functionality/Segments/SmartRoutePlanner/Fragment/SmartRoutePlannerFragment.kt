@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality.Fragments
+package com.example.tournote.Functionality.Segments.SmartRoutePlanner.Fragment
 
 import android.Manifest
 import android.content.Context
@@ -14,18 +14,17 @@ import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.webkit.GeolocationPermissions
+import android.webkit.JavascriptInterface
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.tournote.Functionality.GeocodingResultsAdapter
-import com.example.tournote.Functionality.GeocodingResultsDataClass
-import com.example.tournote.Functionality.RoutePointsAdapter // Import the new adapter
-import com.example.tournote.R
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter.GeocodingResultsAdapter
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.DataClass.GeocodingResultsDataClass
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter.RoutePointsAdapter
 import com.example.tournote.RoutePointDataClass
 import com.example.tournote.databinding.FragmentSmartRoutePlannerBinding
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -42,7 +41,6 @@ import okhttp3.Request
 import okhttp3.Response
 import org.json.JSONArray
 import java.io.IOException
-
 
 class SmartRoutePlannerFragment : Fragment() {
 
@@ -87,16 +85,37 @@ class SmartRoutePlannerFragment : Fragment() {
             if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
                 fusedLocationClient.lastLocation.addOnSuccessListener { location: Location? ->
                     if (location != null) {
-                        fullRoutePoints.add(RoutePointDataClass("Current Location", location.latitude, location.longitude, isStartPoint = true))
+                        fullRoutePoints.add(
+                            RoutePointDataClass(
+                                "Current Location",
+                                location.latitude,
+                                location.longitude,
+                                isStartPoint = true
+                            )
+                        )
                         updateRoutePointsUI()
                     } else {
                         // Fallback: prompt user or show placeholder
-                        fullRoutePoints.add(RoutePointDataClass("Set Start Point", 0.0, 0.0, isStartPoint = true))
+                        fullRoutePoints.add(
+                            RoutePointDataClass(
+                                "Set Start Point",
+                                0.0,
+                                0.0,
+                                isStartPoint = true
+                            )
+                        )
                     }
                 }
             } else {
                 // Request permission or show placeholder
-                fullRoutePoints.add(RoutePointDataClass("Set Start Point", 0.0, 0.0, isStartPoint = true))
+                fullRoutePoints.add(
+                    RoutePointDataClass(
+                        "Set Start Point",
+                        0.0,
+                        0.0,
+                        isStartPoint = true
+                    )
+                )
             }
         }
 
@@ -154,10 +173,13 @@ class SmartRoutePlannerFragment : Fragment() {
         val currentStart = fullRoutePoints.firstOrNull { it.isStartPoint }
         if (currentStart != null) {
             val index = fullRoutePoints.indexOf(currentStart)
-            fullRoutePoints[index] = RoutePointDataClass(name, latitude, longitude, isStartPoint = true)
+            fullRoutePoints[index] =
+                RoutePointDataClass(name, latitude, longitude, isStartPoint = true)
         } else {
             // Should not happen if initialized correctly, but as a fallback
-            fullRoutePoints.add(0, RoutePointDataClass(name, latitude, longitude, isStartPoint = true))
+            fullRoutePoints.add(0,
+                RoutePointDataClass(name, latitude, longitude, isStartPoint = true)
+            )
         }
         updateRoutePointsUI()
         mediator_createRouteToDestination()
@@ -188,7 +210,8 @@ class SmartRoutePlannerFragment : Fragment() {
         val currentEnd = fullRoutePoints.firstOrNull { it.isEndPoint }
         if (currentEnd != null) {
             val index = fullRoutePoints.indexOf(currentEnd)
-            fullRoutePoints[index] = RoutePointDataClass(name, latitude, longitude, isEndPoint = true)
+            fullRoutePoints[index] =
+                RoutePointDataClass(name, latitude, longitude, isEndPoint = true)
         } else {
             // Should not happen, but as a fallback
             fullRoutePoints.add(RoutePointDataClass(name, latitude, longitude, isEndPoint = true))
@@ -305,16 +328,20 @@ class SmartRoutePlannerFragment : Fragment() {
                 SearchTarget.START_POINT -> {
                     setStartPoint(result.name, result.latitude, result.longitude)
                 }
+
                 SearchTarget.END_POINT -> {
                     setEndPoint(result.name, result.latitude, result.longitude)
                 }
+
                 SearchTarget.ADD_STOP -> {
                     addStopPoint(result.name, result.latitude, result.longitude)
                 }
+
                 SearchTarget.EDIT_STOP -> {
                     // Implement editing a specific stop if needed
                     showToast("Editing stops is not yet implemented. Please remove and re-add.")
                 }
+
                 SearchTarget.NONE -> {
                     // Should not happen if logic is correct
                 }
@@ -745,42 +772,42 @@ class SmartRoutePlannerFragment : Fragment() {
     }
 
     inner class WebAppInterface {
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun showToast(message: String) {
             activity?.runOnUiThread {
                 Toast.makeText(activity, message, Toast.LENGTH_SHORT).show()
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onMarkerClick(latitude: Double, longitude: Double, title: String) {
             activity?.runOnUiThread {
                 showToast("Marker clicked: $title at ($latitude, $longitude)")
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onMapClick(latitude: Double, longitude: Double) {
             activity?.runOnUiThread {
                 showToast("Map clicked at: ($latitude, $longitude)")
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onRouteFound(distance: String, duration: String) {
             activity?.runOnUiThread {
                 showToast("Route found: $distance, $duration")
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onRouteFoundWithStop(distance: String, duration: String) {
             activity?.runOnUiThread {
                 showToast("Route with stop found: $distance, $duration")
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onRouteFoundWithMultipleStops(distance: String, duration: String, numWaypoints: Int) {
             activity?.runOnUiThread {
                 val numStops = numWaypoints - 2 // Subtract start and end points
@@ -788,7 +815,7 @@ class SmartRoutePlannerFragment : Fragment() {
             }
         }
 
-        @android.webkit.JavascriptInterface
+        @JavascriptInterface
         fun onRouteError(error: String) {
             activity?.runOnUiThread {
                 showToast("Route error: $error")
@@ -802,4 +829,3 @@ class SmartRoutePlannerFragment : Fragment() {
         _binding = null
     }
 }
-

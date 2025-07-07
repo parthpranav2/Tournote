@@ -11,20 +11,21 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Activity.MainActivity
-import com.example.tournote.GroupInfoModel
+import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 
 class FetchIncludedGroupDetailsRecyclerViewAdapter(
     private val context: Context,
-    private val groupList: List<GroupInfoModel>,
     private val viewModel: GroupSelectorActivityViewModel
 ) : RecyclerView.Adapter<FetchIncludedGroupDetailsRecyclerViewAdapter.ViewHolder>() {
+
+    private var groupList: List<GroupInfoModel> = emptyList()
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profilePhoto: ImageView = itemView.findViewById(R.id.imgProfilePic)
         val name: TextView = itemView.findViewById(R.id.txtName)
-        val clickable : ConstraintLayout = itemView.findViewById(R.id.itemBody)
+        val clickable: ConstraintLayout = itemView.findViewById(R.id.itemBody)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -34,14 +35,15 @@ class FetchIncludedGroupDetailsRecyclerViewAdapter(
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val user = groupList[position]
-        holder.name.text = user.name ?: "Unknown"
+        val group = groupList[position]
+        holder.name.text = group.name ?: "Unknown Group"
 
-        if (user.profilePic == "null" || user.profilePic.isNullOrBlank()) {
+        // Handle profile picture loading
+        if (group.profilePic == "null" || group.profilePic.isNullOrBlank()) {
             holder.profilePhoto.setImageResource(R.drawable.defaultgroupimage)
         } else {
             Glide.with(context)
-                .load(user.profilePic)
+                .load(group.profilePic)
                 .placeholder(R.drawable.defaultgroupimage)
                 .error(R.drawable.defaultgroupimage)
                 .into(holder.profilePhoto)
@@ -49,11 +51,16 @@ class FetchIncludedGroupDetailsRecyclerViewAdapter(
 
         holder.clickable.setOnClickListener {
             val intent = Intent(context, MainActivity::class.java)
-            intent.putExtra("GROUP_ID", user.groupid ?: "")
+            intent.putExtra("GROUP_ID", group.groupid ?: "")
             context.startActivity(intent)
         }
     }
 
     override fun getItemCount(): Int = groupList.size
 
+    // Function to update the adapter data
+    fun updateGroupList(newGroupList: List<GroupInfoModel>) {
+        groupList = newGroupList
+        notifyDataSetChanged()
+    }
 }

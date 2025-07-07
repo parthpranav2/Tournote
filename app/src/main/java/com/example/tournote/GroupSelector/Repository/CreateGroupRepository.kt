@@ -1,0 +1,174 @@
+package com.example.tournote.GroupSelector.Repository
+
+import com.example.tournote.GlobalClass
+import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
+import com.example.tournote.Onboarding.Repository.authRepository
+import com.example.tournote.UserModel
+import com.google.firebase.Firebase
+import com.google.firebase.database.database
+import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.tasks.await
+
+class CreateGroupRepository {
+    private val db = Firebase.firestore
+    private val repo = authRepository()
+    val realDB = Firebase.database
+
+    suspend fun fetchDetailsOfAllUsers(): Result<List<UserModel>> {
+        return try {
+            val snapshot = realDB
+                .getReference("users")
+                .get()
+                .await()
+            val userList = mutableListOf<UserModel>()
+
+            snapshot.children.forEach { userSnapshot ->
+                val uid = userSnapshot.key  // uid is the node key
+                val personalDetails = userSnapshot.child("PersonalDetails")
+                val email = personalDetails.child("email").getValue(String::class.java)
+                val name = personalDetails.child("name").getValue(String::class.java)
+                val phoneNumber = personalDetails.child("phoneNumber").getValue(String::class.java)
+                val profilePic = personalDetails.child("profilePic").getValue(String::class.java)
+
+                if (uid != null && email != null) {
+                    userList.add(
+                        UserModel(
+                            uid = uid,
+                            email = email,
+                            name = name,
+                            phoneNumber = phoneNumber,
+                            profilePic = profilePic
+                        )
+                    )
+                }
+            }
+
+            Result.success(userList)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun fetchDetailsOfGroups(): Result<List<GroupInfoModel>> {
+        val uid = repo.getUid()
+
+        return uid?.let {
+            try {
+                val userSnapshot = realDB
+                    .getReference("users")
+                    .child(it)
+                    .child("Groups")
+                    .get()
+                    .await()
+
+                val groupIds = userSnapshot.children.mapNotNull { group -> group.key }
+
+                val groupList = mutableListOf<GroupInfoModel>()
+
+                for (groupId in groupIds) {
+                    val groupSnapshot = realDB
+                        .getReference("groups")
+                        .child(groupId)
+                        .child("GroupDetails")
+                        .get()
+                        .await()
+
+                    if (groupSnapshot.exists()) {
+                        val name = groupSnapshot.child("name").getValue(String::class.java) ?: "Unnamed Group"
+                        val profilePic = groupSnapshot.child("profilePic").getValue(String::class.java) ?: "null"
+
+                        groupList.add(
+                            GroupInfoModel(
+                                groupid = groupId,
+                                name = name,
+                                profilePic = profilePic
+                            )
+                        )
+                    }
+                }
+
+                Result.success(groupList)
+            } catch (e: Exception) {
+                Result.failure(e)
+            }
+        } ?: Result.failure(IllegalStateException("User UID is null"))
+    }
+
+    suspend fun registerGroup(
+        name: String,
+        description: String,
+        members: List<UserModel>,
+        groupProfileUrl: String
+    ): Result<String> {
+        return try {
+            val memberEmails = if (members.isNotEmpty()) {
+                members.mapNotNull { it.email }
+            } else {
+                listOf(GlobalClass.Email ?: "unknown@email.com")
+            }
+
+            // Generate a unique group ID (Realtime DB)
+            val groupId = realDB.getReference("groups").push().key
+                ?: return Result.failure(Exception("Failed to generate group ID"))
+
+            // Create group details
+            val groupDetails = mapOf(
+                "groupId" to groupId,
+                "name" to name,
+                "description" to description,
+                "profilePic" to groupProfileUrl,
+                "createdAt" to System.currentTimeMillis()
+            )
+
+            // Save group details under /groups/{groupId}/GroupDetails
+            realDB.getReference("groups")
+                .child(groupId)
+                .child("GroupDetails")
+                .setValue(groupDetails)
+                .await()
+
+            // Add members under /groups/{groupId}/Members
+            val membersMap = mutableMapOf<String, Boolean>()
+            memberEmails.forEach { email ->
+                val sanitizedEmail = email.replace(".", ",")  // Firebase keys cannot contain '.'
+                membersMap[sanitizedEmail] = true
+            }
+
+            realDB.getReference("groups")
+                .child(groupId)
+                .child("Members")
+                .setValue(membersMap)
+                .await()
+
+            // Add groupId to each user's /users/{uid}/Groups/{groupId}: true
+            addGroupIdToUsersByEmail(memberEmails, groupId)
+
+            Result.success(groupId)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    private suspend fun addGroupIdToUsersByEmail(emails: List<String>, groupId: String) {
+        try {
+            val usersSnapshot = realDB.getReference("users").get().await()
+
+            for (userSnapshot in usersSnapshot.children) {
+                val uid = userSnapshot.key ?: continue
+                val userEmail = userSnapshot.child("PersonalDetails").child("email").getValue(String::class.java)
+
+                if (userEmail != null && userEmail in emails) {
+                    realDB.getReference("users")
+                        .child(uid)
+                        .child("Groups")
+                        .child(groupId)
+                        .setValue(true)
+                        .await()
+                }
+            }
+        } catch (e: Exception) {
+            println("Error while adding group to users: ${e.message}")
+        }
+    }
+
+}

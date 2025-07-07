@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.ImageButton
-import android.widget.ImageView
 import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -21,17 +20,14 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
-import com.example.tournote.Functionality.MenuActionHandler
-import com.example.tournote.Functionality.SocketManager
-import com.example.tournote.Functionality.ViewModel.ChatViewModel
+import com.example.tournote.Functionality.Segments.ChatRoom.Interface.MenuActionHandler
+import com.example.tournote.Functionality.Segments.ChatRoom.Object.SocketManager
+import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
-import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
 import com.example.tournote.R
-import com.example.tournote.databinding.ActivityGroupSelectorBinding
 import com.example.tournote.databinding.ActivityMainBinding
-import com.google.firebase.logger.Logger
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding

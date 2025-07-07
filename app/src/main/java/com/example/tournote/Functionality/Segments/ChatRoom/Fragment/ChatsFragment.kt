@@ -1,32 +1,22 @@
-package com.example.tournote.Functionality.Fragments
+package com.example.tournote.Functionality.Segments.ChatRoom.Fragment
 
-import android.R.attr.clipToPadding
 import android.os.Bundle
 import android.util.Log
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import android.widget.Button
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.Toast
-import android.widget.Toolbar
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tournote.Functionality.Activity.MainActivity
-import com.example.tournote.Functionality.Adapter.ChatAdapter
-import com.example.tournote.Functionality.MenuActionHandler
-import com.example.tournote.Functionality.ViewModel.ChatViewModel
+import com.example.tournote.Functionality.Segments.ChatRoom.Adapter.ChatAdapter
+import com.example.tournote.Functionality.Segments.ChatRoom.Interface.MenuActionHandler
+import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
-import com.example.tournote.Functionality.data.ChatItem
-import com.example.tournote.Functionality.data.ChatMessage
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
 import com.example.tournote.GlobalClass
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.R
@@ -34,11 +24,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import java.util.Locale
-import java.util.UUID
-import kotlin.text.clear
 
-class ChatsFragment : Fragment(), MenuActionHandler {
+class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
 
     private val mainViewModel: MainActivityViewModel by viewModels()
     private val chatViewModel: ChatViewModel by viewModels()
@@ -255,7 +242,13 @@ class ChatsFragment : Fragment(), MenuActionHandler {
                         val group_id = GlobalClass.group_id
                         val msg_id = chatViewModel.generateShortMessageId()
                         val msg = ChatMessage(
-                            msg_content, user_name, group_id, userID, profile_pic = profile_url, message_id = msg_id,isUser = true
+                            msg_content,
+                            user_name,
+                            group_id,
+                            userID,
+                            profile_pic = profile_url,
+                            message_id = msg_id,
+                            isUser = true
                         )
                         chatViewModel.sendMsg(msg)
                     }else{

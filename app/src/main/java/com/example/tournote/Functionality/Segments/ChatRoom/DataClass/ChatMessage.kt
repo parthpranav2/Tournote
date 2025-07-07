@@ -1,6 +1,4 @@
-package com.example.tournote.Functionality.data
-
-import java.util.UUID
+package com.example.tournote.Functionality.Segments.ChatRoom.DataClass
 
 data class ChatMessage(
     var message_content: String? = null,

@@ -7,7 +7,7 @@
     android:id="@+id/rootLayout"
     android:clipToPadding="false"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".Functionality.Fragments.ChatsFragment"
+    tools:context=".Functionality.Segments.ChatRoom.Fragment.ChatsFragment"
     android:background="@color/green_theme_Light">
 
 

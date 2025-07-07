@@ -1,19 +1,14 @@
-package com.example.tournote.Functionality.ViewModel
+package com.example.tournote.Functionality.Segments.ChatRoom.ViewModel
 
 import android.content.Context
 import android.util.Log
-import androidx.fragment.app.viewModels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.tournote.Functionality.Adapter.ChatAdapter
-import com.example.tournote.Functionality.Repository.ChatRepository
-import com.example.tournote.Functionality.data.ChatItem
-import com.example.tournote.Functionality.data.ChatMessage
-import com.example.tournote.Onboarding.ViewModel.authViewModel
-import io.socket.client.Ack
-import kotlinx.coroutines.CoroutineScope
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatItem
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
+import com.example.tournote.Functionality.Segments.ChatRoom.Repository.ChatRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -22,8 +17,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 import java.util.UUID
-import kotlin.coroutines.AbstractCoroutineContextKey
-import kotlin.getValue
 
 class ChatViewModel: ViewModel() {
 
@@ -31,7 +24,7 @@ class ChatViewModel: ViewModel() {
 
     var hasStartedListening = false
     private val _incomeMessage = MutableLiveData<ChatMessage>()
-    val incomeMessage : LiveData<ChatMessage>  get() = _incomeMessage
+    val incomeMessage : LiveData<ChatMessage> get() = _incomeMessage
 
     private val _messages = MutableLiveData<List<ChatMessage>>()
     val messages: LiveData<List<ChatMessage>> get()  = _messages

@@ -1,9 +1,11 @@
-package com.example.tournote.Functionality.Adapter
+package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
 
+import android.content.Context
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -11,16 +13,14 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.ViewModel.ChatViewModel
-import com.example.tournote.Functionality.data.ChatItem
-import com.example.tournote.Functionality.data.ChatMessage
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatItem
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
 import com.example.tournote.R
-import com.google.api.Context
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
+class ChatAdapter(val context: Context): ListAdapter<ChatItem, RecyclerView.ViewHolder>(ChatItemDiffCallback()) {
     private var selectedMessageId: String? = null
     var selectionListener: ((selectedCount: Boolean) -> Unit)? = null
 
@@ -84,7 +84,7 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
         return sdf.format(Date(timestamp))
     }
 
-    inner class UserMessageViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
+    inner class UserMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val messageTextView = itemView.findViewById<TextView>(R.id.messageText)
         private val timestampTextView = itemView.findViewById<TextView>(R.id.timeText)
         private val editTV = itemView.findViewById<TextView>(R.id.edited)
@@ -124,7 +124,7 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
         }
     }
 
-    inner class DateHeaderViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
+    inner class DateHeaderViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val dateHeaderTextView = itemView.findViewById<TextView>(R.id.dateHeaderText)
         fun bind(label: String) {
             dateHeaderTextView.text = label
@@ -132,11 +132,11 @@ class ChatAdapter(val context: android.content.Context): ListAdapter<ChatItem, R
     }
 
 
-    inner class OtherMessageViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView) {
+    inner class OtherMessageViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val messageTextView = itemView.findViewById<TextView>(R.id.messageText)
         private val timestampTextView = itemView.findViewById<TextView>(R.id.timeText)
         private val userNameTextView = itemView.findViewById<TextView>(R.id.userNameText)
-        private val profilePicImageView = itemView.findViewById<android.widget.ImageView>(R.id.user_avatar)
+        private val profilePicImageView = itemView.findViewById<ImageView>(R.id.user_avatar)
         private val editTV = itemView.findViewById<TextView>(R.id.edited)
         private val body = itemView.findViewById<LinearLayout>(R.id.halloutBody)
 

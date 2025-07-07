@@ -1,5 +1,6 @@
-package com.example.tournote.Functionality
+package com.example.tournote.Functionality.Segments.ChatRoom.Object
 
+import com.example.tournote.Functionality.Segments.ChatRoom.Interface.Api_Interface
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 

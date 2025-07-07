@@ -36,10 +36,26 @@ class OnboardingActivity : AppCompatActivity() {
                 super.onPageSelected(position)
                 // Triggered when a new page becomes selected
                 when(position){
-                    0->binding.imgStatus.setImageResource(R.drawable.screen1active)
-                    1->binding.imgStatus.setImageResource(R.drawable.screen2active)
-                    2->binding.imgStatus.setImageResource(R.drawable.screen3active)
-                    3->binding.imgStatus.setImageResource(R.drawable.screen4active)
+                    0->{
+                        binding.imgStatus.setImageResource(R.drawable.screen1active)
+                        binding.btnChangePage.visibility=View.VISIBLE
+                        binding.btnGoToSignup.visibility=View.GONE
+                    }
+                    1->{
+                        binding.imgStatus.setImageResource(R.drawable.screen2active)
+                        binding.btnChangePage.visibility=View.VISIBLE
+                        binding.btnGoToSignup.visibility=View.GONE
+                    }
+                    2->{
+                        binding.imgStatus.setImageResource(R.drawable.screen3active)
+                        binding.btnChangePage.visibility=View.VISIBLE
+                        binding.btnGoToSignup.visibility=View.GONE
+                    }
+                    3->{
+                        binding.imgStatus.setImageResource(R.drawable.screen4active)
+                        binding.btnChangePage.visibility=View.GONE
+                        binding.btnGoToSignup.visibility=View.VISIBLE
+                    }
                 }
             }
 
@@ -58,14 +74,17 @@ class OnboardingActivity : AppCompatActivity() {
         binding.btnChangePage.setOnClickListener {
             if(viewPager.currentItem<3){
                 viewPager.currentItem++
-                if(viewPager.currentItem==3){
-                    binding.btnChangePage.visibility= View.GONE
-                }
             }
         }
 
         binding.btnGoToSignin.setOnClickListener{
             val intent = Intent(this, LogInActivity::class.java)
+            startActivity(intent)
+            finish()
+        }
+
+        binding.btnGoToSignup.setOnClickListener {
+            val intent = Intent(this, SignUpActivity::class.java)
             startActivity(intent)
             finish()
         }

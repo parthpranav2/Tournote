@@ -3,11 +3,11 @@ package com.example.tournote.Functionality.Adapter
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.viewpager2.adapter.FragmentStateAdapter
-import com.example.tournote.Functionality.Fragments.ChatsFragment
-import com.example.tournote.Functionality.Fragments.ExpensesFragment
-import com.example.tournote.Functionality.Fragments.MemoriesFragment
-import com.example.tournote.Functionality.Fragments.SmartRoutePlannerFragment
-import com.example.tournote.Functionality.Fragments.TrackFriendsFragment
+import com.example.tournote.Functionality.Segments.ChatRoom.Fragment.ChatsFragment
+import com.example.tournote.Functionality.Segments.Expenses.ExpensesFragment
+import com.example.tournote.Functionality.Segments.Memories.MemoriesFragment
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.Fragment.SmartRoutePlannerFragment
+import com.example.tournote.Functionality.Segments.TrackFriends.TrackFriendsFragment
 
 class FunctionalityPagerAdapter(fragmentActivity: FragmentActivity) : FragmentStateAdapter(fragmentActivity){
     override fun getItemCount(): Int = 5

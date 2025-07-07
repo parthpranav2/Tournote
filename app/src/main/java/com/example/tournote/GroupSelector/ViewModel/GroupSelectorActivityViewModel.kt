@@ -7,14 +7,15 @@ import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupInfoModel
+import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
+import com.example.tournote.GroupSelector.Repository.CreateGroupRepository
 import com.example.tournote.UserModel
-import com.example.tournote.createGroupRepository
 import kotlinx.coroutines.launch
 import java.io.File
 
 class GroupSelectorActivityViewModel : ViewModel() {
-    private val repo = createGroupRepository()
+
+    val repo = CreateGroupRepository()
     val isLoading = MutableLiveData<Boolean>()
 
     private val _resetUI =  MutableLiveData(false)

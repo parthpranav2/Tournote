@@ -9,23 +9,29 @@ import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import com.example.tournote.UserModel
 
 class AddUsers_CreateGroupRecyclerViewAdapter(
     private val context: Context,
-    private val fullUserList: List<UserModel> ,
+    private val fullUserList: List<UserModel>,
     private val viewModel: GroupSelectorActivityViewModel
 ) : RecyclerView.Adapter<AddUsers_CreateGroupRecyclerViewAdapter.ViewHolder>() {
 
-    private var filteredUserList: List<UserModel> = fullUserList.toList()
+    // Filter out the current user from the full list
+    private val filteredFullUserList: List<UserModel> = fullUserList.filter { user ->
+        user.email != GlobalClass.Email
+    }
+
+    private var filteredUserList: List<UserModel> = filteredFullUserList.toList()
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profilePhoto: ImageView = itemView.findViewById(R.id.imgProfilePic)
         val name: TextView = itemView.findViewById(R.id.txtName)
-        val clickable : ConstraintLayout = itemView.findViewById(R.id.itemBody)
-        val tick : ImageView=itemView.findViewById(R.id.imgtick)
+        val clickable: ConstraintLayout = itemView.findViewById(R.id.itemBody)
+        val tick: ImageView = itemView.findViewById(R.id.imgtick)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -48,7 +54,6 @@ class AddUsers_CreateGroupRecyclerViewAdapter(
                 .into(holder.profilePhoto)
         }
 
-
         // Initial state
         holder.tick.setImageResource(R.drawable.untick)
         holder.tick.tag = R.drawable.untick
@@ -66,15 +71,14 @@ class AddUsers_CreateGroupRecyclerViewAdapter(
         }
     }
 
-
     override fun getItemCount(): Int = filteredUserList.size
 
     // 🔍 Call this function to filter the list
     fun filter(query: String) {
         filteredUserList = if (query.isBlank()) {
-            fullUserList
+            filteredFullUserList
         } else {
-            fullUserList.filter {
+            filteredFullUserList.filter {
                 it.name?.contains(query, ignoreCase = true) == true
             }
         }

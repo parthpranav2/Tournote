@@ -42,6 +42,32 @@
         android:layout_height="match_parent">
 
         <RelativeLayout
+            android:id="@+id/btnGoToSignup"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="15dp"
+            android:layout_marginBottom="22dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:visibility="gone"
+            >
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sign Up"
+                android:textColor="@color/bluetext"
+                android:textSize="25sp"
+                android:layout_marginTop="13.5dp"
+                android:layout_marginBottom="13.5dp"
+                android:layout_marginLeft="20dp"
+                android:layout_marginRight="20dp"
+                android:layout_centerInParent="true" />
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/btnGoToSignin"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -76,6 +102,7 @@
             android:layout_marginBottom="22dp"
             android:clickable="true"
             android:focusable="true"
+            android:visibility="visible"
             >
 
             <TextView

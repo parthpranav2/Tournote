@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality.data
+package com.example.tournote.Functionality.Segments.ChatRoom.DataClass
 
 sealed class ChatItem {
     data class DateHeader(val label: String) : ChatItem()

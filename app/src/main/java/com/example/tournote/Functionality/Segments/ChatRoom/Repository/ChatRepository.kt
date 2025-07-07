@@ -1,14 +1,13 @@
-package com.example.tournote.Functionality.Repository
+package com.example.tournote.Functionality.Segments.ChatRoom.Repository
 
 import android.util.Log
-import com.example.tournote.Functionality.APIClient
-import com.example.tournote.Functionality.SocketManager
-import com.example.tournote.Functionality.data.ChatMessage
+import com.example.tournote.Functionality.Segments.ChatRoom.Object.APIClient
+import com.example.tournote.Functionality.Segments.ChatRoom.Object.SocketManager
+import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
 import io.socket.client.Ack
 import io.socket.client.Socket
 import io.socket.emitter.Emitter
 import org.json.JSONObject
-import retrofit2.Call
 import retrofit2.Response
 
 class ChatRepository {

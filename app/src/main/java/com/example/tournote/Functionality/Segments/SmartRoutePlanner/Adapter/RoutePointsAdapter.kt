@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality
+package com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter
 
 import android.view.LayoutInflater
 import android.view.View
@@ -9,7 +9,6 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import com.example.tournote.R
 import com.example.tournote.RoutePointDataClass
-
 
 class RoutePointsAdapter(
     private var routePoints: MutableList<RoutePointDataClass>,
