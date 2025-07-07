@@ -7,6 +7,12 @@
     tools:context=".Functionality.Segments.SmartRoutePlanner.Fragment.SmartRoutePlannerFragment"
     android:background="@color/green_theme_Light">
 
+    <TextView
+        android:id="@+id/textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1565C0" />
+
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -31,7 +37,6 @@
         app:layout_constraintEnd_toEndOf="parent"
         >
 
-
         <androidx.cardview.widget.CardView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -42,158 +47,228 @@
             android:elevation="80dp"
             >
 
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
                 >
-                <LinearLayout
+
+                <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     >
-
-                    <!--start point-->
-                    <RelativeLayout
-                        android:id="@+id/btnStart"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone"
+                        android:orientation="vertical"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         >
-                        <LinearLayout
-                            android:layout_width="match_parent"
+
+                        <!--start point-->
+                        <RelativeLayout
+                            android:id="@+id/btnStart"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
+                            android:visibility="gone"
+                            >
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                >
+                                <TextView
+                                    android:id="@+id/txtStart"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="50dp"
+                                    android:paddingLeft="20dp"
+                                    android:paddingRight="40dp"
+                                    android:hint="Choose Start Point"
+                                    android:textColorHint="@color/black"
+                                    android:textColor="@color/black"
+                                    android:maxLines="1"
+                                    android:enabled="true"
+                                    android:gravity="center_vertical"/>
+
+                                <FrameLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="20dp"
+                                    android:layout_gravity="center_horizontal"
+                                    android:background="@drawable/horizontalsaperator1"
+                                    />
+                            </LinearLayout>
+                        </RelativeLayout>
+
+                        <!--stops point-->
+                        <RelativeLayout
+                            android:id="@+id/btnStops"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:visibility="gone"
+                            >
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="vertical"
+                                >
+                                <TextView
+                                    android:id="@+id/txtStops"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="50dp"
+                                    android:paddingLeft="20dp"
+                                    android:paddingRight="40dp"
+                                    android:hint="Add Stops"
+                                    android:textColorHint="@color/black"
+                                    android:textColor="@color/black"
+                                    android:maxLines="1"
+                                    android:enabled="true"
+                                    android:gravity="center_vertical"/>
+
+                                <FrameLayout
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginHorizontal="20dp"
+                                    android:layout_gravity="center_horizontal"
+                                    android:background="@drawable/horizontalsaperator1"
+                                    />
+                            </LinearLayout>
+                        </RelativeLayout>
+
+                        <!--end point-->
+                        <RelativeLayout
+                            android:id="@+id/btnDestination"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             >
                             <TextView
-                                android:id="@+id/txtStart"
+                                android:id="@+id/txtDestination"
                                 android:layout_width="match_parent"
                                 android:layout_height="50dp"
                                 android:paddingLeft="20dp"
                                 android:paddingRight="40dp"
-                                android:hint="Choose Start Point"
+                                android:hint="Choose End Point"
                                 android:textColorHint="@color/black"
                                 android:textColor="@color/black"
                                 android:maxLines="1"
                                 android:enabled="true"
                                 android:gravity="center_vertical"/>
+                        </RelativeLayout>
 
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="20dp"
-                                android:layout_gravity="center_horizontal"
-                                android:background="@drawable/horizontalsaperator1"
-                                />
-                        </LinearLayout>
-                    </RelativeLayout>
+                    </LinearLayout>
 
-                    <!--stops point-->
+
                     <RelativeLayout
-                        android:id="@+id/btnStops"
-                        android:clickable="true"
-                        android:focusable="true"
+                        android:id="@+id/btnSwap"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         android:visibility="gone"
                         >
-                        <LinearLayout
-                            android:layout_width="match_parent"
+                        <ImageView
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            >
-                            <TextView
-                                android:id="@+id/txtStops"
-                                android:layout_width="match_parent"
-                                android:layout_height="50dp"
-                                android:paddingLeft="20dp"
-                                android:paddingRight="40dp"
-                                android:hint="Add Stops"
-                                android:textColorHint="@color/black"
-                                android:textColor="@color/black"
-                                android:maxLines="1"
-                                android:enabled="true"
-                                android:gravity="center_vertical"/>
-
-                            <FrameLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginHorizontal="20dp"
-                                android:layout_gravity="center_horizontal"
-                                android:background="@drawable/horizontalsaperator1"
-                                />
-                        </LinearLayout>
+                            android:src="@drawable/swap"
+                            android:layout_margin="15dp"
+                            />
                     </RelativeLayout>
 
-                    <!--end point-->
                     <RelativeLayout
-                        android:id="@+id/btnDestination"
-                        android:clickable="true"
-                        android:focusable="true"
+                        android:id="@+id/btnRemoveStop"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintBottom_toTopOf="@id/btnSwap"
+                        android:visibility="gone"
+                        >
+
+                        <ImageView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/cross_round"
+                            android:layout_margin="15dp"
+                            />
+                    </RelativeLayout>
+
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintTop_toBottomOf="@id/btnAddStopInRoute"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:background="#B6B6B6"
+                    >
+                    <!-- route details-->
+                    <LinearLayout
+                        android:id="@+id/routeDetails"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:visibility="gone"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginLeft="10dp"
+                        android:layout_marginBottom="5dp"
+                        android:paddingTop="3dp"
                         >
                         <TextView
-                            android:id="@+id/txtDestination"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:paddingLeft="20dp"
-                            android:paddingRight="40dp"
-                            android:hint="Choose End Point"
-                            android:textColorHint="@color/black"
+                            android:id="@+id/labelSmartRoute"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Smart Route"
+                            android:textSize="18sp"
+                            android:layout_marginBottom="5dp"
+                            android:textColor="#DE000000"
+                            android:visibility="gone"/>
+                        <TextView
+                            android:id="@+id/textView_total_trip_time"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
                             android:textColor="@color/black"
-                            android:maxLines="1"
-                            android:enabled="true"
-                            android:gravity="center_vertical"/>
-                    </RelativeLayout>
-
-                </LinearLayout>
-
-
-                <RelativeLayout
-                    android:id="@+id/btnSwap"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:visibility="gone"
-                    >
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/swap"
-                        android:layout_margin="15dp"
-                        />
-                </RelativeLayout>
-
-                <RelativeLayout
-                    android:id="@+id/btnRemoveStop"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintBottom_toTopOf="@id/btnSwap"
-                    android:visibility="gone"
-                    >
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:src="@drawable/cross_round"
-                        android:layout_margin="15dp"
-                        />
-                </RelativeLayout>
+                            android:text=""
+                            android:textSize="14sp"
+                            />
+                        <TextView
+                            android:id="@+id/textView_total_trip_distance"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:text=""
+                            android:textSize="14sp"
+                            />
+                        <TextView
+                            android:id="@+id/textView_finalComment"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/black"
+                            android:text=""
+                            android:layout_marginTop="3dp"
+                            android:visibility="gone"
+                            android:textSize="13sp"
+                            />
+                    </LinearLayout>
 
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
 
 
         </androidx.cardview.widget.CardView>
+
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:id="@+id/frmFullRoute"
@@ -237,29 +312,6 @@
                 android:layout_marginHorizontal="10dp"
                 android:layout_marginBottom="5dp"
                 />
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:layout_constraintTop_toBottomOf="@id/btnAddStopInRoute"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                android:visibility="gone"
-                >
-                <TextView
-                    android:id="@+id/textView_total_trip_time"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:textColor="@color/white"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:layout_margin="10dp"
-                    android:text="Total trip : 19hr 21min"
-                    android:textSize="15sp"
-                    />
-            </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </RelativeLayout>
@@ -277,6 +329,14 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="Plot Route"
+            android:visibility="gone"
+            />
+        <Button
+            android:id="@+id/btnSmartRoute"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Smart Route"
             android:visibility="gone"
             />
         <Button

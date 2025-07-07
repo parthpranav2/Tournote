@@ -55,7 +55,6 @@ class MainActivity : AppCompatActivity() {
         checkLocationPermission()
 
         window.navigationBarColor = ContextCompat.getColor(this, R.color.green_theme_Light_taskbar)
-        window.statusBarColor = ContextCompat.getColor(this, R.color.green_theme_Light_taskbar)
 
         val group_logo = binding.grpLogo
         val group_name = binding.grpName
@@ -106,6 +105,8 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.toolbar.visibility=View.GONE
+                        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.white)
                         binding.bottomButtons.visibility = View.VISIBLE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.white))
@@ -121,6 +122,8 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.toolbar.visibility=View.VISIBLE
+                        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.VISIBLE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
@@ -136,6 +139,8 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.toolbar.visibility=View.VISIBLE
+                        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.VISIBLE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
@@ -151,6 +156,8 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
+                        binding.toolbar.visibility=View.VISIBLE
+                        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.GONE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
@@ -166,6 +173,9 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsactive)
 
+                        binding.toolbar.visibility=View.GONE
+                        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.white)
+                        binding.bottomButtons.visibility = View.VISIBLE
 
                         binding.txtSmartRoute.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))
                         binding.txtChats.setTextColor(ContextCompat.getColor(this@MainActivity, R.color.darkBluetext))

@@ -12,12 +12,14 @@
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', Arial, sans-serif; /* Using Inter font */
+            overflow: hidden; /* Prevent body scroll */
         }
 
         #map {
             width: 100%;
             height: 100vh;
+            border-radius: 10px; /* Rounded corners for map */
         }
 
         .route-info {
@@ -48,19 +50,19 @@
         }
 
         .start-marker {
-            background-color: #4CAF50;
+            background-color: #4CAF50; /* Green */
             width: 20px;
             height: 20px;
         }
 
         .stop-marker {
-            background-color: #FF9800;
+            background-color: #FF9800; /* Orange */
             width: 20px;
             height: 20px;
         }
 
         .end-marker {
-            background-color: #F44336;
+            background-color: #F44336; /* Red */
             width: 20px;
             height: 20px;
         }
@@ -71,12 +73,13 @@
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
             border: 1px solid #e0e0e0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', Tahoma, Geneva, Verdana, sans-serif; /* Using Inter font */
             max-width: 300px;
             position: absolute;
             top: 10px;
             left: 10px;
             z-index: 1000;
+            overflow: hidden; /* Ensure rounded corners clip content */
         }
 
         .leaflet-routing-container h2 {
@@ -94,7 +97,6 @@
             margin: 8px 0;
             color: #4285F4;
             font-weight: 500;
-            padding: 0 15px;
             background: #f8f9fa;
             padding: 8px 15px;
             margin: 0;
@@ -187,10 +189,47 @@
         .leaflet-routing-container.collapsed .leaflet-routing-instructions {
             display: none;
         }
+
+        /* Loading indicator styles */
+        #loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            z-index: 2000;
+            display: none; /* Hidden by default */
+            font-size: 16px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        #loading-indicator .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 <div id="map"></div>
+<div id="loading-indicator">
+    <span class="spinner"></span>
+    Calculating optimal route...
+</div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
@@ -207,6 +246,8 @@
     // Store markers and routes
     let markers = [];
     let currentRoute = null;
+    let currentWaypoints = []; // Store the last set of waypoints used for routing
+    let currentWaypointNames = []; // Store the last set of waypoint names
 
     // Function to create custom marker with label
     function createCustomMarker(type, label = '') {
@@ -288,15 +329,218 @@
         }
     }
 
+    /**
+     * Calculates route details (distance and duration) for a given set of waypoints without rendering on the map.
+     * @param {Array<L.LatLng>} waypoints - An array of Leaflet LatLng objects.
+     * @returns {Promise<{distance: number, duration: number}|null>} - A promise resolving to an object with total distance (meters) and duration (seconds), or null if an error occurs.
+     */
+    async function calculateRouteDetails(waypoints) {
+        if (waypoints.length < 2) {
+            console.warn("Not enough waypoints to calculate route details.");
+            return null;
+        }
+
+        const coordinates = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
+        const serviceUrl = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=false&alternatives=false&steps=false`;
+
+        try {
+            const response = await fetch(serviceUrl);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+
+            if (data.routes && data.routes.length > 0) {
+                const route = data.routes[0];
+                return {
+                    distance: route.distance, // meters
+                    duration: route.duration   // seconds
+                };
+            } else {
+                console.warn("No routes found for the given waypoints.");
+                return null;
+            }
+        } catch (error) {
+            console.error("Error calculating route details:", error);
+            return null;
+        }
+    }
+
+    /**
+     * Generates all permutations of an array.
+     * @param {Array<any>} arr - The input array.
+     * @returns {Array<Array<any>>} - An array containing all permutations.
+     */
+    function getPermutations(arr) {
+        const result = [];
+
+        function permute(current, remaining) {
+            if (remaining.length === 0) {
+                result.push(current);
+                return;
+            }
+
+            for (let i = 0; i < remaining.length; i++) {
+                const next = current.concat(remaining[i]);
+                const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));
+                permute(next, newRemaining);
+            }
+        }
+
+        permute([], arr);
+        return result;
+    }
+
+    /**
+     * Shows the loading indicator.
+     */
+    function showLoading() {
+        document.getElementById('loading-indicator').style.display = 'flex';
+    }
+
+    /**
+     * Hides the loading indicator.
+     */
+    function hideLoading() {
+        document.getElementById('loading-indicator').style.display = 'none';
+    }
+
+    /**
+     * Performs smart routing by trying all permutations of stop points to find the optimal route
+     * with the minimum time, then updates the map with that route.
+     * @param {number} startLat - Latitude of the start point.
+     * @param {number} startLng - Longitude of the start point.
+     * @param {Array<{lat: number, lng: number, name?: string}>} stopsArray - Array of stop point objects.
+     * @param {number} endLat - Latitude of the end point.
+     * @param {number} endLng - Longitude of the end point.
+     * @param {string} startName - Name of the start point.
+     * @param {Array<string>} stopNamesArray - Array of names for stop points.
+     * @param {string} endName - Name of the end point.
+     */
+    async function performSmartRouting(startLat, startLng, stopsArray, endLat, endLng, startName, stopNamesArray, endName) {
+    showLoading();
+    showToast('Calculating optimal route...');
+
+    if (stopsArray.length === 0) {
+        // If no stops, just calculate the direct route
+        createRoute(startLat, startLng, endLat, endLng, startName, endName);
+        hideLoading();
+        // Even for no stops, you might want to call Android to update UI accordingly
+        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
+             Android.onSmartRouteCalculated(
+                 (minDistance / 1000).toFixed(2), (minDuration / 60).toFixed(0), // Assuming these are defined for direct route too
+                 (minDistance / 1000).toFixed(2), (minDuration / 60).toFixed(0), // Max can be same as min for direct
+                 2, // Start and End points
+                 JSON.stringify([{ lat: startLat, lng: startLng, name: startName, isStartPoint: true, isEndPoint: false }, { lat: endLat, lng: endLng, name: endName, isStartPoint: false, isEndPoint: true }])
+             );
+        }
+        return;
+    }
+
+    const startPoint = L.latLng(startLat, startLng);
+    const endPoint = L.latLng(endLat, endLng);
+
+    // Convert stop objects to L.LatLng for permutation
+    const stopLatLngs = stopsArray.map(s => L.latLng(s.lat, s.lng));
+    const stopOriginalNames = stopsArray.map(s => s.name || '');
+
+    const permutations = getPermutations(stopLatLngs);
+    let minDuration = Infinity;
+    let optimalRouteWaypoints = [];
+    let optimalRouteNames = [];
+    let maxDuration = 0;
+    let minDistance = Infinity;
+    let maxDistance = 0;
+
+    // Store results for reporting
+    const allRouteResults = [];
+
+    for (const perm of permutations) {
+        const currentRouteWaypoints = [startPoint, ...perm, endPoint];
+        const routeDetails = await calculateRouteDetails(currentRouteWaypoints);
+
+        if (routeDetails) {
+            allRouteResults.push(routeDetails);
+
+            if (routeDetails.duration < minDuration) {
+                minDuration = routeDetails.duration;
+                optimalRouteWaypoints = currentRouteWaypoints;
+                // Reconstruct names based on optimal permutation
+                const currentRouteNames = [startName];
+                perm.forEach((p, index) => {
+                    const originalIndex = stopLatLngs.findIndex(s => s.equals(p));
+                    currentRouteNames.push(stopOriginalNames[originalIndex] || `Stop ${getStopLabel(index)}`);
+                });
+                currentRouteNames.push(endName);
+                optimalRouteNames = currentRouteNames;
+            }
+
+            if (routeDetails.duration > maxDuration) {
+                maxDuration = routeDetails.duration;
+            }
+            if (routeDetails.distance < minDistance) {
+                minDistance = routeDetails.distance;
+            }
+            if (routeDetails.distance > maxDistance) {
+                maxDistance = routeDetails.distance;
+            }
+        }
+    }
+
+    hideLoading();
+
+    if (optimalRouteWaypoints.length > 0) {
+        // Display the optimal route on the map
+        createRouteWithMultipleStops(optimalRouteWaypoints, optimalRouteNames);
+        showToast('Optimal route found and displayed!');
+
+        // --- NEW CODE START ---
+        // Prepare the optimal waypoint order as a JSON string for Android
+        const optimalWaypointOrder = optimalRouteWaypoints.map((wp, index) => ({
+            lat: wp.lat,
+            lng: wp.lng,
+            name: optimalRouteNames[index] || '', // Ensure name is always a string
+            isStartPoint: index === 0,
+            isEndPoint: index === optimalRouteWaypoints.length - 1
+        }));
+        const optimalWaypointOrderJson = JSON.stringify(optimalWaypointOrder);
+        // --- NEW CODE END ---
+
+        // Report results to Android
+        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) { // Added check for Android.onSmartRouteCalculated
+            Android.onSmartRouteCalculated(
+                (minDistance / 1000).toFixed(2),
+                (minDuration / 60).toFixed(0),
+                (maxDistance / 1000).toFixed(2),
+                (maxDuration / 60).toFixed(0),
+                optimalRouteWaypoints.length,
+                optimalWaypointOrderJson // Pass the new JSON parameter here
+            );
+        }
+        console.log('Smart Routing Complete:');
+        console.log(`Min Time: ${Math.round(minDuration / 60)} min, Min Distance: ${(minDistance / 1000).toFixed(2)} km`);
+        console.log(`Max Time: ${Math.round(maxDuration / 60)} min, Max Distance: ${(maxDistance / 1000).toFixed(2)} km`);
+    } else {
+        showToast('Could not find any routes for smart routing.');
+        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) { // Added check for Android.onSmartRouteCalculated
+            Android.onSmartRouteCalculated('N/A', 'N/A', 'N/A', 'N/A', 0, "[]"); // Pass an empty JSON array if no route
+        }
+    }
+}
+
+
     // Function to create route using Leaflet Routing Machine (original 2-point route)
     function createRoute(startLat, startLng, endLat, endLng, startName, endName) {
         clearRoutes();
 
+        currentWaypoints = [
+            L.latLng(startLat, startLng),
+            L.latLng(endLat, endLng)
+        ];
+        currentWaypointNames = [startName, endName];
+
         currentRoute = L.Routing.control({
-            waypoints: [
-                L.latLng(startLat, startLng),
-                L.latLng(endLat, endLng)
-            ],
+            waypoints: currentWaypoints,
             routeWhileDragging: false,
             addWaypoints: false,
             draggableWaypoints: false,
@@ -353,12 +597,15 @@
     function createRouteWithOneStop(startLat, startLng, stopLat, stopLng, endLat, endLng, startName, stopName, endName) {
         clearRoutes();
 
+        currentWaypoints = [
+            L.latLng(startLat, startLng),
+            L.latLng(stopLat, stopLng),
+            L.latLng(endLat, endLng)
+        ];
+        currentWaypointNames = [startName, stopName, endName];
+
         currentRoute = L.Routing.control({
-            waypoints: [
-                L.latLng(startLat, startLng),
-                L.latLng(stopLat, stopLng),
-                L.latLng(endLat, endLng)
-            ],
+            waypoints: currentWaypoints,
             routeWhileDragging: false,
             addWaypoints: false,
             draggableWaypoints: false,
@@ -419,7 +666,16 @@
     function createRouteWithMultipleStops(waypoints, waypointNames) {
         clearRoutes();
 
-        let leafletWaypoints = waypoints.map(wp => L.latLng(wp.lat || wp[0], wp.lng || wp[1]));
+        // Ensure waypoints are L.LatLng objects
+        let leafletWaypoints = waypoints.map(wp => {
+            if (wp instanceof L.LatLng) {
+                return wp;
+            }
+            return L.latLng(wp.lat || wp[0], wp.lng || wp[1]);
+        });
+
+        currentWaypoints = leafletWaypoints;
+        currentWaypointNames = waypointNames;
 
         currentRoute = L.Routing.control({
             waypoints: leafletWaypoints,
@@ -503,7 +759,8 @@
         stops.forEach(stop => {
             waypoints.push({
                 lat: stop.lat || stop[0],
-                lng: stop.lng || stop[1]
+                lng: stop.lng || stop[1],
+                name: stop.name // Preserve name if available
             });
         });
 
@@ -524,6 +781,8 @@
 
         if (waypoints.length >= 2) {
             let leafletWaypoints = waypoints.map(wp => L.latLng(wp[0], wp[1]));
+            currentWaypoints = leafletWaypoints;
+            currentWaypointNames = []; // Reset names for legacy function
 
             currentRoute = L.Routing.control({
                 waypoints: leafletWaypoints,
@@ -644,7 +903,7 @@
         }
     }
 
-    // Show toast function
+    // Show toast function (for Android communication or console log)
     function showToast(message) {
         if (typeof Android !== 'undefined') {
             Android.showToast(message);
