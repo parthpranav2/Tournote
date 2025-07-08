@@ -45,16 +45,16 @@ class RoutePointsAdapter(
                 holder.labelImage.setImageResource(R.drawable.circleforlabel_startpoint)
             }
             routePoint.isEndPoint -> {
-                holder.txtLabel.text = "E"
+                holder.txtLabel.text = ""
                 // You can change the background drawable for end point if needed
-                holder.labelImage.setImageResource(R.drawable.circleforlabel_notstartpoint)
+                holder.labelImage.setImageResource(R.drawable.circleforlabel_endpoint)
             }
             else -> {
                 // For stops, use alphabetical labels (A, B, C, etc.)
                 val stopIndex = getStopIndex(position)
                 holder.txtLabel.text = ('A' + stopIndex).toString()
                 // Use the default drawable for stops
-                holder.labelImage.setImageResource(R.drawable.circleforlabel_notstartpoint)
+                holder.labelImage.setImageResource(R.drawable.circleforlabel_waypoint)
             }
         }
 

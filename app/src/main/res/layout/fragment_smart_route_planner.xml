@@ -7,11 +7,6 @@
     tools:context=".Functionality.Segments.SmartRoutePlanner.Fragment.SmartRoutePlannerFragment"
     android:background="@color/green_theme_Light">
 
-    <TextView
-        android:id="@+id/textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="1565C0" />
 
     <FrameLayout
         android:layout_width="match_parent"

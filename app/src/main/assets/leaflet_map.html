@@ -3,11 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Leaflet Route Planner - Multiple Stops with Labels</title>
-
+    <title>Leaflet Route Planner Multiple Stops with Labels</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
-
     <style>
         body {
             margin: 0;
@@ -190,57 +188,98 @@
             display: none;
         }
 
-        /* Loading indicator styles */
-        #loading-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.7);
+        /* Loading Overlay Styles (Updated for progress) */
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent dark overlay */
             color: white;
-            padding: 15px 25px;
-            border-radius: 8px;
-            z-index: 2000;
-            display: none; /* Hidden by default */
-            font-size: 16px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column; /* Stacks spinner and text vertically */
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Ensures it's on top of everything */
+            font-family: 'Inter', Arial, sans-serif; /* Consistent font with your app */
+            font-size: 1.4em; /* Increased base font size for overlay */
+            visibility: hidden; /* Hidden by default */
+            opacity: 0;
+            transition: visibility 0s, opacity 0.3s linear; /* Smooth fade in/out */
         }
 
-        #loading-indicator .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.3);
-            border-top: 4px solid #fff;
+        #loadingOverlay .spinner {
+            border: none; /* Remove old border */
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin-right: 10px;
-            display: inline-block;
-            vertical-align: middle;
+            width: 80px; /* Increased size */
+            height: 80px; /* Increased size */
+            /* Use conic-gradient for blue progress bar */
+            background: conic-gradient(#4285F4 var(--progress, 0%), rgba(255, 255, 255, 0.3) 0%); /* Blue progress */
+            /* Removed animation: spin */
+            margin-bottom: 20px; /* Increased margin */
+            display: flex; /* To position innerCircle */
+            align-items: center;
+            justify-content: center;
+            position: relative; /* Needed for absolute positioning of innerCircle */
         }
 
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        /* New style for the inner circle */
+        #loadingOverlay .spinner #innerCircle {
+            position: absolute;
+            width: calc(100% - 20px); /* Creates a 10px border-like gap for the progress bar (20px total) */
+            height: calc(100% - 20px);
+            border-radius: 50%;
+            background-color: var(--inner-circle-color, hsl(0, 100%, 50%)); /* Initial red (hue 0) */
+            display: flex;
+            flex-direction: column; /* To stack percentage and estimated time */
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.5s ease-in-out; /* Smooth color transition */
+        }
+
+        /* Style for the percentage text */
+        #loadingOverlay .spinner #innerCircle #percentageText {
+            font-size: 1em; /* Adjusted relative to new spinner size */
+            font-weight: bold;
+            color: white; /* Ensure text is visible on both red and green */
+            text-shadow: 0 0 3px rgba(0,0,0,0.5); /* For better visibility */
+        }
+
+        /* Style for estimated time text inside the spinner */
+        #loadingOverlay #estimatedTimeTextBelow { /* New ID for external element */
+            font-size: 0.7em; /* Smaller font for estimated time */
+            color: rgba(255, 255, 255, 0.8); /* Slightly less prominent */
+            text-shadow: 0 0 3px rgba(0,0,0,0.5);
+            margin-top: 5px; /* Small margin from progress text */
         }
     </style>
 </head>
 <body>
+
 <div id="map"></div>
-<div id="loading-indicator">
-    <span class="spinner"></span>
-    Calculating optimal route...
+
+<!-- Loading Overlay HTML -->
+<div id="loadingOverlay">
+    <div class="spinner">
+        <div id="innerCircle">
+            <span id="percentageText">0%</span>
+        </div>
+    </div>
+    <span id="loadingMessage">Calculating optimal route...</span>
+    <span id="loadingProgressText"></span>
+    <span id="estimatedTimeTextBelow"></span> <!-- Moved span for estimated time -->
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
-
 <script>
     // Initialize the map with default location
     let map = L.map('map', { zoomControl: false }).setView([28.6139, 77.2090], 10);
 
     // Add OpenStreetMap tiles
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors'
+        attribution: ' OpenStreetMap contributors'
     }).addTo(map);
 
     // Store markers and routes
@@ -251,23 +290,21 @@
 
     // Function to create custom marker with label
     function createCustomMarker(type, label = '') {
-        let className = 'custom-marker ';
+        let className = 'custom-marker';
         let content = label;
-
         switch(type) {
             case 'start':
-                className += 'start-marker';
+                className += ' start-marker';
                 content = ''; // Start point has no label
                 break;
             case 'stop':
-                className += 'stop-marker';
+                className += ' stop-marker';
                 break;
             case 'end':
-                className += 'end-marker';
-                content = 'E'; // End point has 'E' label
+                className += ' end-marker';
+                content = ''; // End point has 'E' label
                 break;
         }
-
         return L.divIcon({
             html: `<div class="${className}">${content}</div>`,
             iconSize: [20, 20],
@@ -279,9 +316,8 @@
     function getStopIndex(position, waypoints) {
         let stopCount = 0;
         for (let i = 0; i < position; i++) {
-            if (i !== 0 && i !== waypoints.length - 1) {
+            if (i !== 0 && i !== waypoints.length - 1)
                 stopCount++;
-            }
         }
         return stopCount;
     }
@@ -301,23 +337,19 @@
         let marker = L.marker([lat, lng]).addTo(map);
         if (popup) {
             marker.bindPopup(popup);
+            marker.on('click', function() {
+                if (typeof Android !== 'undefined') {
+                    Android.onMarkerClick(lat, lng, popup + ' Marker');
+                }
+            });
         }
-
-        marker.on('click', function() {
-            if (typeof Android !== 'undefined') {
-                Android.onMarkerClick(lat, lng, popup || 'Marker');
-            }
-        });
-
         markers.push(marker);
         return marker;
     }
 
     // Function to clear all markers
     function clearMarkers() {
-        markers.forEach(marker => {
-            map.removeLayer(marker);
-        });
+        markers.forEach(marker => map.removeLayer(marker));
         markers = [];
     }
 
@@ -332,14 +364,13 @@
     /**
      * Calculates route details (distance and duration) for a given set of waypoints without rendering on the map.
      * @param {Array<L.LatLng>} waypoints - An array of Leaflet LatLng objects.
-     * @returns {Promise<{distance: number, duration: number}|null>} - A promise resolving to an object with total distance (meters) and duration (seconds), or null if an error occurs.
+     * @returns {Promise<{distance: number, duration: number} | null>} A promise resolving to an object with total distance (meters) and duration (seconds), or null if an error occurs
      */
     async function calculateRouteDetails(waypoints) {
         if (waypoints.length < 2) {
             console.warn("Not enough waypoints to calculate route details.");
             return null;
         }
-
         const coordinates = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
         const serviceUrl = `https://router.project-osrm.org/route/v1/driving/${coordinates}?overview=false&alternatives=false&steps=false`;
 
@@ -349,12 +380,11 @@
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-
             if (data.routes && data.routes.length > 0) {
                 const route = data.routes[0];
                 return {
                     distance: route.distance, // meters
-                    duration: route.duration   // seconds
+                    duration: route.duration // seconds
                 };
             } else {
                 console.warn("No routes found for the given waypoints.");
@@ -368,25 +398,22 @@
 
     /**
      * Generates all permutations of an array.
-     * @param {Array<any>} arr - The input array.
-     * @returns {Array<Array<any>>} - An array containing all permutations.
+     * @param {Array<any>} arr The input array.
+     * @returns {Array<Array<any>>} An array containing all permutations.
      */
     function getPermutations(arr) {
         const result = [];
-
         function permute(current, remaining) {
             if (remaining.length === 0) {
                 result.push(current);
                 return;
             }
-
             for (let i = 0; i < remaining.length; i++) {
                 const next = current.concat(remaining[i]);
                 const newRemaining = remaining.slice(0, i).concat(remaining.slice(i + 1));
                 permute(next, newRemaining);
             }
         }
-
         permute([], arr);
         return result;
     }
@@ -395,14 +422,92 @@
      * Shows the loading indicator.
      */
     function showLoading() {
-        document.getElementById('loading-indicator').style.display = 'flex';
+        const overlay = document.getElementById('loadingOverlay');
+        const spinnerElement = document.querySelector('#loadingOverlay .spinner');
+        const percentageTextElement = document.getElementById('percentageText');
+        const innerCircleElement = document.getElementById('innerCircle');
+        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow'); // Updated ID
+
+
+        if (overlay && spinnerElement && percentageTextElement && innerCircleElement && estimatedTimeTextElement) {
+            overlay.style.visibility = 'visible';
+            overlay.style.opacity = '1';
+            // Reset main message and clear progress text when showing
+            document.getElementById('loadingMessage').innerText = 'Calculating optimal route...';
+            document.getElementById('loadingProgressText').innerText = '';
+            spinnerElement.style.setProperty('--progress', '0%'); // Reset progress
+            percentageTextElement.innerText = '0%'; // Reset percentage text
+            estimatedTimeTextElement.innerText = ''; // Clear estimated time text
+            innerCircleElement.style.setProperty('--inner-circle-color', 'hsl(0, 100%, 50%)'); // Reset to red
+        }
     }
 
     /**
      * Hides the loading indicator.
      */
     function hideLoading() {
-        document.getElementById('loading-indicator').style.display = 'none';
+        const overlay = document.getElementById('loadingOverlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.visibility = 'hidden';
+        }
+    }
+
+    /**
+     * Updates the progress text in the loading indicator.
+     * @param {number} current - The current number of permutations processed.
+     * @param {number} total - The total number of permutations.
+     * @param {number} startTime - The timestamp when the smart routing started (milliseconds).
+     */
+    function updateLoadingProgress(current, total, startTime) {
+        const progressTextElement = document.getElementById('loadingProgressText');
+        const spinnerElement = document.querySelector('#loadingOverlay .spinner');
+        const percentageTextElement = document.getElementById('percentageText');
+        const innerCircleElement = document.getElementById('innerCircle');
+        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow'); // Updated ID
+
+
+        if (progressTextElement && spinnerElement && percentageTextElement && innerCircleElement && estimatedTimeTextElement) {
+            const percentage = total === 0 ? 0 : (current / total) * 100;
+            const clampedPercentage = Math.min(100, Math.max(0, percentage));
+
+            const elapsedTime = (Date.now() - startTime) / 1000; // in seconds
+            let estimatedTimeRemaining = 0;
+
+            if (current > 0 && total > 0) {
+                const progressRatio = current / total;
+                const estimatedTotalTime = elapsedTime / progressRatio;
+                estimatedTimeRemaining = estimatedTotalTime - elapsedTime;
+            }
+
+            const minutesRemaining = Math.floor(estimatedTimeRemaining / 60);
+            const secondsRemaining = Math.round(estimatedTimeRemaining % 60);
+
+            let estimatedTimeDisplay = '';
+            if (estimatedTimeRemaining > 0) {
+                if(minutesRemaining>0){
+                estimatedTimeDisplay = `Estimated time. ${minutesRemaining}m ${secondsRemaining}s`;
+                }else{
+                estimatedTimeDisplay = `Estimated time. ${secondsRemaining}s`;
+                }
+            } else if (current === total && total > 0) {
+                estimatedTimeDisplay = 'Completed!';
+            }
+
+
+            progressTextElement.innerText = `(${current} of ${total} options analyzed)`;
+            estimatedTimeTextElement.innerText = estimatedTimeDisplay; // Update the new span
+            percentageTextElement.innerText = `${Math.round(clampedPercentage)}%`;
+            spinnerElement.style.setProperty('--progress', `${clampedPercentage}%`);
+
+            const hue = (clampedPercentage / 100) * 120;
+            innerCircleElement.style.setProperty('--inner-circle-color', `hsl(${hue}, 100%, 50%)`);
+
+            // Send progress update to Android Kotlin file
+            if (typeof Android !== 'undefined' && Android.onRouteCalculationProgress) {
+                Android.onRouteCalculationProgress(current, total, Math.round(clampedPercentage), Math.round(estimatedTimeRemaining));
+            }
+        }
     }
 
     /**
@@ -418,127 +523,127 @@
      * @param {string} endName - Name of the end point.
      */
     async function performSmartRouting(startLat, startLng, stopsArray, endLat, endLng, startName, stopNamesArray, endName) {
-    showLoading();
-    showToast('Calculating optimal route...');
+        showLoading();
+        const startTime = Date.now(); // Record start time
 
-    if (stopsArray.length === 0) {
-        // If no stops, just calculate the direct route
-        createRoute(startLat, startLng, endLat, endLng, startName, endName);
+        if (stopsArray.length === 0) {
+            // If no stops, just calculate the direct route
+            createRoute(startLat, startLng, endLat, endLng, startName, endName);
+            hideLoading();
+            if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
+                Android.onSmartRouteCalculated(
+                    (0).toFixed(2), (0).toFixed(0), // Min distance/duration can be 0 or calculated direct values
+                    (0).toFixed(2), (0).toFixed(0), // Max can be same as min for direct route
+                    2, // Start and End points
+                    JSON.stringify([{ lat: startLat, lng: startLng, name: startName, isStartPoint: true, isEndPoint: false }, { lat: endLat, lng: endLng, name: endName, isStartPoint: false, isEndPoint: true }])
+                );
+            }
+            return;
+        }
+
+        const startPoint = L.latLng(startLat, startLng);
+        const endPoint = L.latLng(endLat, endLng);
+
+        // Convert stop objects to L.LatLng for permutation
+        const stopLatLngs = stopsArray.map(s => L.latLng(s.lat, s.lng));
+        const stopOriginalNames = stopsArray.map(s => s.name || '');
+
+        const permutations = getPermutations(stopLatLngs);
+        const totalPermutations = permutations.length;
+        let completedCalculations = 0;
+
+        let minDuration = Infinity;
+        let optimalRouteWaypoints = [];
+        let optimalRouteNames = [];
+        let maxDuration = 0;
+        let minDistance = Infinity;
+        let maxDistance = 0;
+
+        const allRouteResults = [];
+
+        // Initial update for progress (0 out of total)
+        updateLoadingProgress(completedCalculations, totalPermutations, startTime);
+
+        for (const perm of permutations) {
+            completedCalculations++;
+
+            // Update progress in the UI after each calculation
+            updateLoadingProgress(completedCalculations, totalPermutations, startTime);
+
+            const currentRouteWaypoints = [startPoint, ...perm, endPoint];
+            const routeDetails = await calculateRouteDetails(currentRouteWaypoints);
+
+            if (routeDetails) {
+                allRouteResults.push(routeDetails);
+
+                if (routeDetails.duration < minDuration) {
+                    minDuration = routeDetails.duration;
+                    optimalRouteWaypoints = currentRouteWaypoints;
+                    const currentRouteNames = [startName];
+                    perm.forEach((p, index) => {
+                        const originalIndex = stopLatLngs.findIndex(s => s.equals(p));
+                        currentRouteNames.push(stopOriginalNames[originalIndex] || `Stop ${getStopLabel(index)}`);
+                    });
+                    currentRouteNames.push(endName);
+                    optimalRouteNames = currentRouteNames;
+                }
+
+                if (routeDetails.duration > maxDuration) {
+                    maxDuration = routeDetails.duration;
+                }
+                if (routeDetails.distance < minDistance) {
+                    minDistance = routeDetails.distance;
+                }
+                if (routeDetails.distance > maxDistance) {
+                    maxDistance = routeDetails.distance;
+                }
+            }
+        }
+
         hideLoading();
-        // Even for no stops, you might want to call Android to update UI accordingly
-        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
-             Android.onSmartRouteCalculated(
-                 (minDistance / 1000).toFixed(2), (minDuration / 60).toFixed(0), // Assuming these are defined for direct route too
-                 (minDistance / 1000).toFixed(2), (minDuration / 60).toFixed(0), // Max can be same as min for direct
-                 2, // Start and End points
-                 JSON.stringify([{ lat: startLat, lng: startLng, name: startName, isStartPoint: true, isEndPoint: false }, { lat: endLat, lng: endLng, name: endName, isStartPoint: false, isEndPoint: true }])
-             );
-        }
-        return;
-    }
 
-    const startPoint = L.latLng(startLat, startLng);
-    const endPoint = L.latLng(endLat, endLng);
+        if (optimalRouteWaypoints.length > 0) {
+            createRouteWithMultipleStops(optimalRouteWaypoints, optimalRouteNames);
+            showToast('Optimal route found and displayed!');
 
-    // Convert stop objects to L.LatLng for permutation
-    const stopLatLngs = stopsArray.map(s => L.latLng(s.lat, s.lng));
-    const stopOriginalNames = stopsArray.map(s => s.name || '');
+            const optimalWaypointOrder = optimalRouteWaypoints.map((wp, index) => ({
+                lat: wp.lat,
+                lng: wp.lng,
+                name: optimalRouteNames[index] || '',
+                isStartPoint: index === 0,
+                isEndPoint: index === optimalRouteWaypoints.length - 1
+            }));
+            const optimalWaypointOrderJson = JSON.stringify(optimalWaypointOrder);
 
-    const permutations = getPermutations(stopLatLngs);
-    let minDuration = Infinity;
-    let optimalRouteWaypoints = [];
-    let optimalRouteNames = [];
-    let maxDuration = 0;
-    let minDistance = Infinity;
-    let maxDistance = 0;
-
-    // Store results for reporting
-    const allRouteResults = [];
-
-    for (const perm of permutations) {
-        const currentRouteWaypoints = [startPoint, ...perm, endPoint];
-        const routeDetails = await calculateRouteDetails(currentRouteWaypoints);
-
-        if (routeDetails) {
-            allRouteResults.push(routeDetails);
-
-            if (routeDetails.duration < minDuration) {
-                minDuration = routeDetails.duration;
-                optimalRouteWaypoints = currentRouteWaypoints;
-                // Reconstruct names based on optimal permutation
-                const currentRouteNames = [startName];
-                perm.forEach((p, index) => {
-                    const originalIndex = stopLatLngs.findIndex(s => s.equals(p));
-                    currentRouteNames.push(stopOriginalNames[originalIndex] || `Stop ${getStopLabel(index)}`);
-                });
-                currentRouteNames.push(endName);
-                optimalRouteNames = currentRouteNames;
+            if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
+                Android.onSmartRouteCalculated(
+                    (minDistance / 1000).toFixed(2),
+                    (minDuration / 60).toFixed(0),
+                    (maxDistance / 1000).toFixed(2),
+                    (maxDuration / 60).toFixed(0),
+                    optimalRouteWaypoints.length,
+                    optimalWaypointOrderJson
+                );
             }
-
-            if (routeDetails.duration > maxDuration) {
-                maxDuration = routeDetails.duration;
-            }
-            if (routeDetails.distance < minDistance) {
-                minDistance = routeDetails.distance;
-            }
-            if (routeDetails.distance > maxDistance) {
-                maxDistance = routeDetails.distance;
+            console.log('Smart Routing Complete:');
+            console.log(`Min Time: ${Math.round(minDuration / 60)} min, Min Distance: ${(minDistance / 1000).toFixed(2)} km`);
+            console.log(`Max Time: ${Math.round(maxDuration / 60)} min, Max Distance: ${(maxDistance / 1000).toFixed(2)} km`);
+        } else {
+            showToast('Could not find any routes for smart routing.');
+            if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
+                Android.onSmartRouteCalculated('N/A', 'N/A', 'N/A', 'N/A', 0, "[]");
             }
         }
     }
-
-    hideLoading();
-
-    if (optimalRouteWaypoints.length > 0) {
-        // Display the optimal route on the map
-        createRouteWithMultipleStops(optimalRouteWaypoints, optimalRouteNames);
-        showToast('Optimal route found and displayed!');
-
-        // --- NEW CODE START ---
-        // Prepare the optimal waypoint order as a JSON string for Android
-        const optimalWaypointOrder = optimalRouteWaypoints.map((wp, index) => ({
-            lat: wp.lat,
-            lng: wp.lng,
-            name: optimalRouteNames[index] || '', // Ensure name is always a string
-            isStartPoint: index === 0,
-            isEndPoint: index === optimalRouteWaypoints.length - 1
-        }));
-        const optimalWaypointOrderJson = JSON.stringify(optimalWaypointOrder);
-        // --- NEW CODE END ---
-
-        // Report results to Android
-        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) { // Added check for Android.onSmartRouteCalculated
-            Android.onSmartRouteCalculated(
-                (minDistance / 1000).toFixed(2),
-                (minDuration / 60).toFixed(0),
-                (maxDistance / 1000).toFixed(2),
-                (maxDuration / 60).toFixed(0),
-                optimalRouteWaypoints.length,
-                optimalWaypointOrderJson // Pass the new JSON parameter here
-            );
-        }
-        console.log('Smart Routing Complete:');
-        console.log(`Min Time: ${Math.round(minDuration / 60)} min, Min Distance: ${(minDistance / 1000).toFixed(2)} km`);
-        console.log(`Max Time: ${Math.round(maxDuration / 60)} min, Max Distance: ${(maxDistance / 1000).toFixed(2)} km`);
-    } else {
-        showToast('Could not find any routes for smart routing.');
-        if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) { // Added check for Android.onSmartRouteCalculated
-            Android.onSmartRouteCalculated('N/A', 'N/A', 'N/A', 'N/A', 0, "[]"); // Pass an empty JSON array if no route
-        }
-    }
-}
-
 
     // Function to create route using Leaflet Routing Machine (original 2-point route)
     function createRoute(startLat, startLng, endLat, endLng, startName, endName) {
         clearRoutes();
-
         currentWaypoints = [
             L.latLng(startLat, startLng),
             L.latLng(endLat, endLng)
         ];
         currentWaypointNames = [startName, endName];
-
         currentRoute = L.Routing.control({
             waypoints: currentWaypoints,
             routeWhileDragging: false,
@@ -575,15 +680,12 @@
             let summary = routes[0].summary;
             let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
             let duration = Math.round(summary.totalTime / 60) + ' min';
-
             setTimeout(() => {
                 addCollapseButton();
             }, 100);
-
             if (typeof Android !== 'undefined') {
                 Android.onRouteFound(distance, duration);
             }
-
             console.log('Route found:', distance, duration);
         }).on('routingerror', function(e) {
             console.error('Routing error:', e.error);
@@ -592,18 +694,15 @@
             }
         }).addTo(map);
     }
-
     // Function to create route with one stop (3-point route)
     function createRouteWithOneStop(startLat, startLng, stopLat, stopLng, endLat, endLng, startName, stopName, endName) {
         clearRoutes();
-
         currentWaypoints = [
             L.latLng(startLat, startLng),
             L.latLng(stopLat, stopLng),
             L.latLng(endLat, endLng)
         ];
         currentWaypointNames = [startName, stopName, endName];
-
         currentRoute = L.Routing.control({
             waypoints: currentWaypoints,
             routeWhileDragging: false,
@@ -626,6 +725,7 @@
             lineOptions: {
                 styles: [
                     {color: '#FFFFFF', weight: 8, opacity: 0.8},
+                    {color: '#FFFFFF', weight: 8, opacity: 0.8},
                     {color: '#4285F4', weight: 6, opacity: 0.9}
                 ]
             },
@@ -644,15 +744,12 @@
             let summary = routes[0].summary;
             let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
             let duration = Math.round(summary.totalTime / 60) + ' min';
-
             setTimeout(() => {
                 addCollapseButton();
             }, 100);
-
             if (typeof Android !== 'undefined') {
                 Android.onRouteFoundWithStop(distance, duration);
             }
-
             console.log('Route with stop found:', distance, duration);
         }).on('routingerror', function(e) {
             console.error('Routing error:', e.error);
@@ -665,7 +762,6 @@
     // Function to create route with multiple stops
     function createRouteWithMultipleStops(waypoints, waypointNames) {
         clearRoutes();
-
         // Ensure waypoints are L.LatLng objects
         let leafletWaypoints = waypoints.map(wp => {
             if (wp instanceof L.LatLng) {
@@ -673,10 +769,8 @@
             }
             return L.latLng(wp.lat || wp[0], wp.lng || wp[1]);
         });
-
         currentWaypoints = leafletWaypoints;
         currentWaypointNames = waypointNames;
-
         currentRoute = L.Routing.control({
             waypoints: leafletWaypoints,
             routeWhileDragging: false,
@@ -684,7 +778,6 @@
             draggableWaypoints: false,
             createMarker: function(i, waypoint, n) {
                 let name = waypointNames && waypointNames[i] ? waypointNames[i] : null;
-
                 if (i === 0) {
                     // Start point
                     return L.marker(waypoint.latLng, { icon: createCustomMarker('start') })
@@ -722,15 +815,12 @@
             let summary = routes[0].summary;
             let distance = (summary.totalDistance / 1000).toFixed(2) + ' km';
             let duration = Math.round(summary.totalTime / 60) + ' min';
-
             setTimeout(() => {
                 addCollapseButton();
             }, 100);
-
             if (typeof Android !== 'undefined') {
                 Android.onRouteFoundWithMultipleStops(distance, duration, waypoints.length);
             }
-
             console.log('Route with multiple stops found:', distance, duration);
         }).on('routingerror', function(e) {
             console.error('Routing error:', e.error);
@@ -755,7 +845,6 @@
         let waypoints = [
             { lat: startLat, lng: startLng }
         ];
-
         stops.forEach(stop => {
             waypoints.push({
                 lat: stop.lat || stop[0],
@@ -763,27 +852,22 @@
                 name: stop.name // Preserve name if available
             });
         });
-
         waypoints.push({ lat: destLat, lng: destLng });
-
         let names = ['Your Location'];
         stops.forEach((stop, index) => {
             names.push(stop.name || `Stop ${getStopLabel(index)}`);
         });
         names.push(destName);
-
         createRouteWithMultipleStops(waypoints, names);
     }
 
     // Legacy function to add route (keeping for backward compatibility)
     function addRoute(waypoints) {
         clearRoutes();
-
         if (waypoints.length >= 2) {
             let leafletWaypoints = waypoints.map(wp => L.latLng(wp[0], wp[1]));
             currentWaypoints = leafletWaypoints;
             currentWaypointNames = []; // Reset names for legacy function
-
             currentRoute = L.Routing.control({
                 waypoints: leafletWaypoints,
                 routeWhileDragging: false,
@@ -820,7 +904,6 @@
     map.on('click', function(e) {
         let lat = e.latlng.lat;
         let lng = e.latlng.lng;
-
         if (typeof Android !== 'undefined') {
             Android.onMapClick(lat, lng);
         }
@@ -853,7 +936,6 @@
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
                 z-index: 1000;
             `;
-
             let isCollapsed = false;
             collapseBtn.addEventListener('click', function() {
                 const instructions = container.querySelector('.leaflet-routing-instructions');
@@ -872,7 +954,6 @@
                     isCollapsed = !isCollapsed;
                 }
             });
-
             container.appendChild(collapseBtn);
         }
     }

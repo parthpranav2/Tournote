@@ -13,4 +13,9 @@
     <color name="selected_bg">#245056</color>
 
     <color name="green_theme_Light_taskbar">#0F2729</color>
+
+    <color name="mapEndPoint">#F44336</color>
+    <color name="mapWaypointsPoint">#FF9800</color>
+    <color name="mapStartPoint">#4CAF50</color>
+
 </resources>

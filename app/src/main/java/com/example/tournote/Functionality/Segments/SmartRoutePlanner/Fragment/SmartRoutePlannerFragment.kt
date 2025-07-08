@@ -69,6 +69,10 @@ class SmartRoutePlannerFragment: Fragment() {
     private var initialRouteTime: Int = 0
     private var initialRouteDistance: Int = 0
 
+    // In SmartRoutePlannerFragment class
+    private var originalRoutePoints: MutableList<RoutePointDataClass> = mutableListOf()
+    private var smartRoutePoints: MutableList<RoutePointDataClass> = mutableListOf()
+
     private var isSmartRouteEnabled = false
 
     // Enum to keep track of which field is currently being searched/edited
@@ -238,45 +242,70 @@ class SmartRoutePlannerFragment: Fragment() {
     private fun setupButtons() {
         // Create Route button now uses stored start, stop (if any), and end points
         binding.btnAddMarker.setOnClickListener { // Renamed from Add Marker conceptually
+            if (isSmartRouteEnabled && originalRoutePoints.isNotEmpty()) {
+                fullRoutePoints.clear()
+                fullRoutePoints.addAll(originalRoutePoints)
+                routePointsAdapter.updateRoutePoints(fullRoutePoints.toList()) // Update RecyclerView
+                updateStopsCountText() // Update the stop count display if needed
+            }
+
             isSmartRouteEnabled=false
             mediator_createRouteToDestination()
         }
 
         binding.btnSmartRoute.setOnClickListener {
+            // 1. Save the current fullRoutePoints as original before calculating smart route
+            originalRoutePoints.clear()
+            originalRoutePoints.addAll(fullRoutePoints.toList()) // Create a deep copy if RoutePointDataClass is mutable; otherwise, shallow copy is fine.
 
-            // Extracting initial details of set route
-            val hours = Regex("""(\d+)\s*hr""").find(binding.textViewTotalTripTime.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            val minutes = Regex("""(\d+)\s*min""").find(binding.textViewTotalTripTime.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
-
-            initialRouteTime = hours * 60 + minutes
-
-            val distance = Regex("""(\d+)\s*km""").find(binding.textViewTotalTripDistance.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
-            initialRouteDistance = distance
-
-
-            val startPoint = fullRoutePoints.firstOrNull { it.isStartPoint }
-            val endPoint = fullRoutePoints.firstOrNull { it.isEndPoint }
-            val stops = fullRoutePoints.filter { !it.isStartPoint && !it.isEndPoint }
-
-            if (startPoint != null && endPoint != null) {
-                val stopsForJs = stops.map { mapOf("lat" to it.latitude, "lng" to it.longitude, "name" to it.name) }
-                val startName = startPoint.name
-                val endName = endPoint.name
-                val stopNames = stops.map { it.name }
-
-                val stopsJson = stopsForJs.joinToString(",") {
-                    val lat = it["lat"]
-                    val lng = it["lng"]
-                    val name = it["name"]?.toString()?.replace("'", "\\'") // Escape single quotes
-                    "{lat:$lat, lng:$lng, name:'$name'}"
-                }
-
-                val script = "performSmartRouting(${startPoint.latitude}, ${startPoint.longitude}, [$stopsJson], ${endPoint.latitude}, ${endPoint.longitude}, '$startName', [${stopNames.joinToString(",") { "'${it.replace("'", "\\'")}'" }}], '$endName');"
-                webView.evaluateJavascript(script, null)
+            if(smartRoutePoints.isNotEmpty()&&smartRoutePoints.containsAll(fullRoutePoints)){
+                fullRoutePoints.clear()
+                fullRoutePoints.addAll(smartRoutePoints)
+                routePointsAdapter.updateRoutePoints(fullRoutePoints.toList()) // Update RecyclerView
+                updateStopsCountText() // Update the stop count display if needed
 
                 isSmartRouteEnabled=true
-            } else {
-                showToast("Please set both start and end points for smart routing.")
+                mediator_createRouteToDestination()
+
+            }else{
+
+                // Extracting initial details of set route
+                val hours = Regex("""(\d+)\s*hr""").find(binding.textViewTotalTripTime.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                val minutes = Regex("""(\d+)\s*min""").find(binding.textViewTotalTripTime.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
+
+                initialRouteTime = hours * 60 + minutes
+
+                val distance = Regex("""(\d+)\s*km""").find(binding.textViewTotalTripDistance.text.toString())?.groupValues?.get(1)?.toIntOrNull() ?: 0
+                initialRouteDistance = distance
+
+
+                val startPoint = fullRoutePoints.firstOrNull { it.isStartPoint }
+                val endPoint = fullRoutePoints.firstOrNull { it.isEndPoint }
+                val stops = fullRoutePoints.filter { !it.isStartPoint && !it.isEndPoint }
+
+                if (startPoint != null && endPoint != null) {
+                    val stopsForJs = stops.map { mapOf("lat" to it.latitude, "lng" to it.longitude, "name" to it.name) }
+                    val startName = startPoint.name
+                    val endName = endPoint.name
+                    val stopNames = stops.map { it.name }
+
+                    val stopsJson = stopsForJs.joinToString(",") {
+                        val lat = it["lat"]
+                        val lng = it["lng"]
+                        val name = it["name"]?.toString()?.replace("'",  "\\'") // Escape single quotes
+                        "{lat:$lat, lng:$lng, name:'$name'}"
+                    }
+
+                    val script = "performSmartRouting(${startPoint.latitude}, ${startPoint.longitude}, [$stopsJson], ${endPoint.latitude}, ${endPoint.longitude}, '$startName', [${stopNames.joinToString(",") { "'${it.replace("'", "\\'")}'" }}], '$endName');"
+                    webView.evaluateJavascript(script, null)
+
+                    isSmartRouteEnabled=true
+
+
+                } else {
+                    showToast("Please set both start and end points for smart routing.")
+                }
+
             }
 
         }
@@ -982,6 +1011,10 @@ class SmartRoutePlannerFragment: Fragment() {
                     fullRoutePoints.addAll(optimalRoutePoints)
                     routePointsAdapter.updateRoutePoints(fullRoutePoints.toList())
                     updateStopsCountText() // Update stop count based on new order
+
+                    //save the route for future call
+                    smartRoutePoints.clear()
+                    smartRoutePoints.addAll(fullRoutePoints)
 
                     showToast("Optimal route calculated and displayed!")
                 } catch (e: Exception) {
