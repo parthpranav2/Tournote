@@ -202,7 +202,7 @@ class SmartRoutePlannerFragment: Fragment() {
             fullRoutePoints.add(0, RoutePointDataClass(name, latitude, longitude, isStartPoint = true))
         }
         updateRoutePointsUI()
-        mediator_createRouteToDestination()
+        mediator_createRouteToDestination_ForInitialRoutes()
     }
 
     // Method to add a stop point (now adds to the list)
@@ -210,7 +210,12 @@ class SmartRoutePlannerFragment: Fragment() {
         val newStop = RoutePointDataClass(name, latitude, longitude)
         routePointsAdapter.addRoutePoint(newStop) // Adapter handles insertion logic
         updateRoutePointsUI()
-        mediator_createRouteToDestination()
+        if(fullRoutePoints.size>3){
+            binding.btnSmartRoute.visibility=View.VISIBLE
+        }else{
+            binding.btnSmartRoute.visibility=View.GONE
+        }
+        mediator_createRouteToDestination_ForInitialRoutes()
     }
 
     // Method to remove a stop point (triggered by adapter callback)
@@ -220,7 +225,7 @@ class SmartRoutePlannerFragment: Fragment() {
             if (!removedPoint.isStartPoint && !removedPoint.isEndPoint) { // Only remove actual stops
                 routePointsAdapter.removeRoutePoint(position)
                 updateRoutePointsUI()
-                mediator_createRouteToDestination()
+                mediator_createRouteToDestination_ForInitialRoutes()
             }
         }
     }
@@ -236,12 +241,14 @@ class SmartRoutePlannerFragment: Fragment() {
             fullRoutePoints.add(RoutePointDataClass(name, latitude, longitude, isEndPoint = true))
         }
         updateRoutePointsUI()
-        mediator_createRouteToDestination()
+        mediator_createRouteToDestination_ForInitialRoutes()
     }
 
     private fun setupButtons() {
         // Create Route button now uses stored start, stop (if any), and end points
         binding.btnAddMarker.setOnClickListener { // Renamed from Add Marker conceptually
+            binding.frmFullRoute.visibility=View.GONE
+
             if (isSmartRouteEnabled && originalRoutePoints.isNotEmpty()) {
                 fullRoutePoints.clear()
                 fullRoutePoints.addAll(originalRoutePoints)
@@ -250,22 +257,22 @@ class SmartRoutePlannerFragment: Fragment() {
             }
 
             isSmartRouteEnabled=false
-            mediator_createRouteToDestination()
+            mediator_createRouteToDestination_ForInitialRoutes()
+
         }
 
         binding.btnSmartRoute.setOnClickListener {
-            // 1. Save the current fullRoutePoints as original before calculating smart route
-            originalRoutePoints.clear()
-            originalRoutePoints.addAll(fullRoutePoints.toList()) // Create a deep copy if RoutePointDataClass is mutable; otherwise, shallow copy is fine.
+            binding.frmFullRoute.visibility=View.GONE
+            binding.relWaypoints.visibility=View.GONE
 
-            if(smartRoutePoints.isNotEmpty()&&smartRoutePoints.containsAll(fullRoutePoints)){
+            if(smartRoutePoints.isNotEmpty()&&smartRoutePoints.containsAll(originalRoutePoints)){
                 fullRoutePoints.clear()
                 fullRoutePoints.addAll(smartRoutePoints)
                 routePointsAdapter.updateRoutePoints(fullRoutePoints.toList()) // Update RecyclerView
                 updateStopsCountText() // Update the stop count display if needed
 
                 isSmartRouteEnabled=true
-                mediator_createRouteToDestination()
+                mediator_createRouteToDestination_ForSmartRoutes()
 
             }else{
 
@@ -327,7 +334,7 @@ class SmartRoutePlannerFragment: Fragment() {
                 // Set destination details to the original start details
                 setEndPoint(tempStartName, tempStartLatitude, tempStartLongitude)
 
-                showToast("Start and Destination swapped!")
+                //showToast("Start and Destination swapped!")
             } else {
                 showToast("Cannot swap: Start or End point not defined.")
             }
@@ -382,8 +389,9 @@ class SmartRoutePlannerFragment: Fragment() {
     }
 
     // Call this each time when you want to refresh the locations
-    fun mediator_createRouteToDestination() {
+    fun mediator_createRouteToDestination_ForInitialRoutes() {
         // Clear previous markers and route before adding new ones
+
         clearAllMarkers()
         clearAllRoutes()
 
@@ -392,12 +400,43 @@ class SmartRoutePlannerFragment: Fragment() {
 
         if (waypoints.size >= 2) {
             createRouteWithMultipleStops(waypoints, waypointNames)
-            showToast("Route created with ${routePointsAdapter.getStopsCount()} stops!")
+            //showToast("Route created with ${routePointsAdapter.getStopsCount()} stops!")
+
+            if(waypoints.size>3){
+                binding.btnSmartRoute.visibility=View.VISIBLE
+            }else{
+                binding.btnSmartRoute.visibility=View.GONE
+            }
+
         } else {
             showToast("Please add at least a start and end point to create a route.")
         }
 
+        // 1. Save the current fullRoutePoints as original before calculating smart route
+        originalRoutePoints.clear()
+        originalRoutePoints.addAll(fullRoutePoints.toList()) // Create a deep copy if RoutePointDataClass is mutable; otherwise, shallow copy is fine.
+
     }
+    fun mediator_createRouteToDestination_ForSmartRoutes() {
+        // Clear previous markers and route before adding new ones
+
+        clearAllMarkers()
+        clearAllRoutes()
+
+        val waypoints = fullRoutePoints.map { Pair(it.latitude, it.longitude) }
+        val waypointNames = fullRoutePoints.map { it.name }
+
+        if (waypoints.size >= 2) {
+            createRouteWithMultipleStops(waypoints, waypointNames)
+            //showToast("Route created with ${routePointsAdapter.getStopsCount()} stops!")
+        } else {
+            showToast("Please add at least a start and end point to create a route.")
+        }
+
+        binding.relWaypoints.visibility=View.VISIBLE
+
+    }
+
 
     private fun setupGeocodingRecyclerView() {
         geocodingResultsAdapter = GeocodingResultsAdapter(geocodingResultsList) { result ->
@@ -492,7 +531,7 @@ class SmartRoutePlannerFragment: Fragment() {
         }
         // When btnDestination (the UI element for Destination) is clicked, open search for end point
         binding.btnDestination.setOnClickListener {
-            binding.btnCurrent.visibility = View.GONE
+            binding.btnCurrent.visibility = View.VISIBLE
             currentSearchTarget = SearchTarget.END_POINT
             binding.frmSearch.visibility = View.VISIBLE
             binding.frmFullRoute.visibility = View.GONE // Hide full route list
@@ -514,6 +553,12 @@ class SmartRoutePlannerFragment: Fragment() {
             currentSearchTarget = SearchTarget.NONE // Reset search target
             // Add a click listener to the "Add Stop" button within the frmFinalRoute
             binding.btnAddStopInRoute.setOnClickListener {
+                if((binding.txtStart.text.toString()!="Current Location")||(binding.txtDestination.text.toString()!="Current Location")){
+                    binding.relWaypoints.visibility=View.VISIBLE
+                }else{
+                    binding.relWaypoints.visibility=View.GONE
+                }
+
                 isSmartRouteEnabled=false
 
                 currentSearchTarget = SearchTarget.ADD_STOP
@@ -594,11 +639,9 @@ class SmartRoutePlannerFragment: Fragment() {
 
         if (hasStart && hasEnd) {
             binding.btnAddMarker.visibility = View.VISIBLE
-            binding.btnSmartRoute.visibility = View.VISIBLE
             binding.btnStops.visibility = View.VISIBLE
         } else {
             binding.btnAddMarker.visibility = View.GONE
-            binding.btnSmartRoute.visibility = View.GONE
             binding.btnStops.visibility = View.GONE
         }
     }
@@ -829,7 +872,7 @@ class SmartRoutePlannerFragment: Fragment() {
         when (requestCode) {
             LOCATION_PERMISSION_REQUEST_CODE -> {
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    showToast("Location permission granted")
+                    //showToast("Location permission granted")
                     if (currentSearchTarget == SearchTarget.START_POINT) {
                         getLastKnownLocation()
                     }
@@ -852,14 +895,14 @@ class SmartRoutePlannerFragment: Fragment() {
         @JavascriptInterface
         fun onMarkerClick(latitude: Double, longitude: Double, title: String) {
             activity?.runOnUiThread {
-                showToast("Marker clicked: $title at ($latitude, $longitude)")
+                //showToast("Marker clicked: $title at ($latitude, $longitude)")
             }
         }
 
         @JavascriptInterface
         fun onMapClick(latitude: Double, longitude: Double) {
             activity?.runOnUiThread {
-                showToast("Map clicked at: ($latitude, $longitude)")
+                //showToast("Map clicked at: ($latitude, $longitude)")
             }
         }
 
@@ -887,7 +930,7 @@ class SmartRoutePlannerFragment: Fragment() {
         @JavascriptInterface
         fun onRouteFoundWithStop(distance: String, duration: String) {
             activity?.runOnUiThread {
-                showToast("Route with stop found: $distance, $duration")
+                //showToast("Route with stop found: $distance, $duration")
                 // Only update if it's not a smart route calculation
                     val totalMinutes = Regex("""\d+""").find(duration)?.value?.toIntOrNull() ?: 0
                     val totalDistance = Regex("""\d+""").find(distance)?.value?.toIntOrNull() ?: 0
@@ -953,7 +996,7 @@ class SmartRoutePlannerFragment: Fragment() {
                 binding.textViewTotalTripDistance.text = "Total trip Distance : $RouteDistance km"
                 binding.routeDetails.visibility = View.VISIBLE
 
-                showToast("Route found with $numStops stops: $distance, $duration")
+                //showToast("Route found with $numStops stops: $distance, $duration")
             }
         }
 
@@ -1016,7 +1059,9 @@ class SmartRoutePlannerFragment: Fragment() {
                     smartRoutePoints.clear()
                     smartRoutePoints.addAll(fullRoutePoints)
 
-                    showToast("Optimal route calculated and displayed!")
+                    binding.relWaypoints.visibility=View.VISIBLE
+
+                    //showToast("Optimal route calculated and displayed!")
                 } catch (e: Exception) {
                     showToast("Error parsing optimal route data: ${e.message}")
                     Log.e("SmartRoute", "Error parsing optimal route data: ${e.message}", e)

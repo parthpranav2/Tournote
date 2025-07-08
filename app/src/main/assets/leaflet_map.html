@@ -246,12 +246,12 @@
             text-shadow: 0 0 3px rgba(0,0,0,0.5); /* For better visibility */
         }
 
-        /* Style for estimated time text inside the spinner */
-        #loadingOverlay #estimatedTimeTextBelow { /* New ID for external element */
-            font-size: 0.7em; /* Smaller font for estimated time */
-            color: rgba(255, 255, 255, 0.8); /* Slightly less prominent */
+        /* Style for estimated time text below the main message */
+        #loadingOverlay #estimatedTimeTextBelow {
+            font-size: 0.8em; /* Slightly smaller than main message */
+            color: rgba(255, 255, 255, 0.9); /* Slightly less prominent */
             text-shadow: 0 0 3px rgba(0,0,0,0.5);
-            margin-top: 5px; /* Small margin from progress text */
+            margin-top: 5px; /* Spacing below the progress text */
         }
     </style>
 </head>
@@ -268,12 +268,15 @@
     </div>
     <span id="loadingMessage">Calculating optimal route...</span>
     <span id="loadingProgressText"></span>
-    <span id="estimatedTimeTextBelow"></span> <!-- Moved span for estimated time -->
+    <span id="estimatedTimeTextBelow"></span> <!-- Moved and renamed for clarity -->
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 <script>
+    // Configuration for the hybrid approach: How many of the top Haversine routes to check with OSRM
+    const NUM_TOP_PERMUTATIONS_TO_CHECK = 5; // You can adjust this value (e.g., 1 to 10)
+
     // Initialize the map with default location
     let map = L.map('map', { zoomControl: false }).setView([28.6139, 77.2090], 10);
 
@@ -362,13 +365,35 @@
     }
 
     /**
-     * Calculates route details (distance and duration) for a given set of waypoints without rendering on the map.
+     * Calculates the Haversine distance (straight-line distance) between two lat/lng points in meters.
+     * @param {L.LatLng} point1 - First Leaflet LatLng object.
+     * @param {L.LatLng} point2 - Second Leaflet LatLng object.
+     * @returns {number} Distance in meters.
+     */
+    function getHaversineDistance(point1, point2) {
+        const R = 6371e3; // metres
+        const φ1 = point1.lat * Math.PI/180; // φ, λ in radians
+        const φ2 = point2.lat * Math.PI/180;
+        const Δφ = (point2.lat - point1.lat) * Math.PI/180;
+        const Δλ = (point2.lng - point1.lng) * Math.PI/180;
+
+        const a = Math.sin(Δφ/2) * Math.sin(Δφ/2) +
+                  Math.cos(φ1) * Math.cos(φ2) *
+                  Math.sin(Δλ/2) * Math.sin(Δλ/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+
+        const d = R * c; // in metres
+        return d;
+    }
+
+    /**
+     * Calculates route details (distance and duration) for a given set of waypoints using OSRM.
      * @param {Array<L.LatLng>} waypoints - An array of Leaflet LatLng objects.
      * @returns {Promise<{distance: number, duration: number} | null>} A promise resolving to an object with total distance (meters) and duration (seconds), or null if an error occurs
      */
     async function calculateRouteDetails(waypoints) {
         if (waypoints.length < 2) {
-            console.warn("Not enough waypoints to calculate route details.");
+            console.warn("Not enough waypoints to calculate route details for OSRM.");
             return null;
         }
         const coordinates = waypoints.map(wp => `${wp.lng},${wp.lat}`).join(';');
@@ -387,11 +412,11 @@
                     duration: route.duration // seconds
                 };
             } else {
-                console.warn("No routes found for the given waypoints.");
+                console.warn("No routes found for the given waypoints by OSRM.");
                 return null;
             }
         } catch (error) {
-            console.error("Error calculating route details:", error);
+            console.error("Error calculating route details with OSRM:", error);
             return null;
         }
     }
@@ -426,8 +451,7 @@
         const spinnerElement = document.querySelector('#loadingOverlay .spinner');
         const percentageTextElement = document.getElementById('percentageText');
         const innerCircleElement = document.getElementById('innerCircle');
-        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow'); // Updated ID
-
+        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow');
 
         if (overlay && spinnerElement && percentageTextElement && innerCircleElement && estimatedTimeTextElement) {
             overlay.style.visibility = 'visible';
@@ -435,9 +459,9 @@
             // Reset main message and clear progress text when showing
             document.getElementById('loadingMessage').innerText = 'Calculating optimal route...';
             document.getElementById('loadingProgressText').innerText = '';
+            estimatedTimeTextElement.innerText = ''; // Clear estimated time text
             spinnerElement.style.setProperty('--progress', '0%'); // Reset progress
             percentageTextElement.innerText = '0%'; // Reset percentage text
-            estimatedTimeTextElement.innerText = ''; // Clear estimated time text
             innerCircleElement.style.setProperty('--inner-circle-color', 'hsl(0, 100%, 50%)'); // Reset to red
         }
     }
@@ -458,16 +482,17 @@
      * @param {number} current - The current number of permutations processed.
      * @param {number} total - The total number of permutations.
      * @param {number} startTime - The timestamp when the smart routing started (milliseconds).
+     * @param {string} phaseMessage - Message indicating the current phase (e.g., "Calculating optimal route...", "Refining route details...")
      */
-    function updateLoadingProgress(current, total, startTime) {
+    function updateLoadingProgress(current, total, startTime, phaseMessage) {
+        const loadingMessageElement = document.getElementById('loadingMessage');
         const progressTextElement = document.getElementById('loadingProgressText');
         const spinnerElement = document.querySelector('#loadingOverlay .spinner');
         const percentageTextElement = document.getElementById('percentageText');
         const innerCircleElement = document.getElementById('innerCircle');
-        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow'); // Updated ID
+        const estimatedTimeTextElement = document.getElementById('estimatedTimeTextBelow');
 
-
-        if (progressTextElement && spinnerElement && percentageTextElement && innerCircleElement && estimatedTimeTextElement) {
+        if (loadingMessageElement && progressTextElement && spinnerElement && percentageTextElement && innerCircleElement && estimatedTimeTextElement) {
             const percentage = total === 0 ? 0 : (current / total) * 100;
             const clampedPercentage = Math.min(100, Math.max(0, percentage));
 
@@ -485,18 +510,15 @@
 
             let estimatedTimeDisplay = '';
             if (estimatedTimeRemaining > 0) {
-                if(minutesRemaining>0){
-                estimatedTimeDisplay = `Estimated time. ${minutesRemaining}m ${secondsRemaining}s`;
-                }else{
-                estimatedTimeDisplay = `Estimated time. ${secondsRemaining}s`;
-                }
+                estimatedTimeDisplay = `Est. ${minutesRemaining}m ${secondsRemaining}s remaining`;
             } else if (current === total && total > 0) {
                 estimatedTimeDisplay = 'Completed!';
             }
 
 
+            loadingMessageElement.innerText = phaseMessage; // Update the main message
             progressTextElement.innerText = `(${current} of ${total} options analyzed)`;
-            estimatedTimeTextElement.innerText = estimatedTimeDisplay; // Update the new span
+            estimatedTimeTextElement.innerText = estimatedTimeDisplay;
             percentageTextElement.innerText = `${Math.round(clampedPercentage)}%`;
             spinnerElement.style.setProperty('--progress', `${clampedPercentage}%`);
 
@@ -524,113 +546,161 @@
      */
     async function performSmartRouting(startLat, startLng, stopsArray, endLat, endLng, startName, stopNamesArray, endName) {
         showLoading();
-        const startTime = Date.now(); // Record start time
-
-        if (stopsArray.length === 0) {
-            // If no stops, just calculate the direct route
-            createRoute(startLat, startLng, endLat, endLng, startName, endName);
-            hideLoading();
-            if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
-                Android.onSmartRouteCalculated(
-                    (0).toFixed(2), (0).toFixed(0), // Min distance/duration can be 0 or calculated direct values
-                    (0).toFixed(2), (0).toFixed(0), // Max can be same as min for direct route
-                    2, // Start and End points
-                    JSON.stringify([{ lat: startLat, lng: startLng, name: startName, isStartPoint: true, isEndPoint: false }, { lat: endLat, lng: endLng, name: endName, isStartPoint: false, isEndPoint: true }])
-                );
-            }
-            return;
-        }
+        const startTime = Date.now(); // Record start time for the entire process
 
         const startPoint = L.latLng(startLat, startLng);
         const endPoint = L.latLng(endLat, endLng);
 
-        // Convert stop objects to L.LatLng for permutation
-        const stopLatLngs = stopsArray.map(s => L.latLng(s.lat, s.lng));
-        const stopOriginalNames = stopsArray.map(s => s.name || '');
+        let finalMinDistance = 'N/A';
+        let finalMinDuration = 'N/A';
+        let finalOptimalWaypoints = [];
+        let finalOptimalNames = [];
+        let bestActualDuration = Infinity; // Central variable for comparing actual durations
 
-        const permutations = getPermutations(stopLatLngs);
-        const totalPermutations = permutations.length;
-        let completedCalculations = 0;
+        // Handle 0 intermediate stops (direct route)
+        if (stopsArray.length === 0) {
+            const directWaypoints = [startPoint, endPoint];
+            const directNames = [startName, endName];
+            updateLoadingProgress(0, 1, startTime, 'Calculating direct route...'); // Initial state for direct route
+            const directRouteDetails = await calculateRouteDetails(directWaypoints);
+            if (directRouteDetails) {
+                finalMinDistance = (directRouteDetails.distance / 1000).toFixed(2);
+                finalMinDuration = (directRouteDetails.duration / 60).toFixed(0);
+                finalOptimalWaypoints = directWaypoints;
+                finalOptimalNames = directNames;
+            } else {
+                showToast('Could not find a direct route.');
+            }
+            updateLoadingProgress(1, 1, startTime, 'Direct route calculated!'); // Final state for direct route
+            hideLoading();
+        } else {
+            // Convert stop objects to L.LatLng for permutation
+            const stopLatLngs = stopsArray.map(s => L.latLng(s.lat, s.lng));
+            const stopOriginalNames = stopsArray.map(s => s.name || '');
 
-        let minDuration = Infinity;
-        let optimalRouteWaypoints = [];
-        let optimalRouteNames = [];
-        let maxDuration = 0;
-        let minDistance = Infinity;
-        let maxDistance = 0;
+            const permutations = getPermutations(stopLatLngs);
+            const totalPermutations = permutations.length;
 
-        const allRouteResults = [];
+            if (stopsArray.length <= 2) { // Covers 1 or 2 intermediate stops (total waypoints 3 or 4)
+                // Strategy: Directly calculate all actual OSRM routes for small number of permutations
+                let completedOsrmChecks = 0;
+                document.getElementById('loadingMessage').innerText = 'Calculating all route options...';
 
-        // Initial update for progress (0 out of total)
-        updateLoadingProgress(completedCalculations, totalPermutations, startTime);
+                for (const perm of permutations) {
+                    completedOsrmChecks++;
+                    updateLoadingProgress(completedOsrmChecks, totalPermutations, startTime, 'Calculating all route options...');
 
-        for (const perm of permutations) {
-            completedCalculations++;
-
-            // Update progress in the UI after each calculation
-            updateLoadingProgress(completedCalculations, totalPermutations, startTime);
-
-            const currentRouteWaypoints = [startPoint, ...perm, endPoint];
-            const routeDetails = await calculateRouteDetails(currentRouteWaypoints);
-
-            if (routeDetails) {
-                allRouteResults.push(routeDetails);
-
-                if (routeDetails.duration < minDuration) {
-                    minDuration = routeDetails.duration;
-                    optimalRouteWaypoints = currentRouteWaypoints;
-                    const currentRouteNames = [startName];
-                    perm.forEach((p, index) => {
+                    const currentRouteWaypoints = [startPoint, ...perm, endPoint];
+                    const currentRouteNames = [startName].concat(perm.map(p => {
                         const originalIndex = stopLatLngs.findIndex(s => s.equals(p));
-                        currentRouteNames.push(stopOriginalNames[originalIndex] || `Stop ${getStopLabel(index)}`);
+                        return stopOriginalNames[originalIndex] || `Stop ${getStopLabel(stopLatLngs.indexOf(p))}`;
+                    })).concat(endName);
+
+                    const actualRouteDetails = await calculateRouteDetails(currentRouteWaypoints);
+
+                    if (actualRouteDetails) {
+                        if (actualRouteDetails.duration < bestActualDuration) {
+                            bestActualDuration = actualRouteDetails.duration;
+                            finalMinDistance = (actualRouteDetails.distance / 1000).toFixed(2);
+                            finalMinDuration = (actualRouteDetails.duration / 60).toFixed(0);
+                            finalOptimalWaypoints = currentRouteWaypoints;
+                            finalOptimalNames = currentRouteNames;
+                        }
+                    }
+                }
+                hideLoading();
+            } else { // stopsArray.length >= 3, use hybrid approach
+                // Phase 1: Haversine calculation to find top K
+                let completedHaversineCalculations = 0;
+                let topHaversineRoutes = []; // Array of { haversineDistance: number, waypoints: L.LatLng[], names: string[] }
+
+                updateLoadingProgress(completedHaversineCalculations, totalPermutations, startTime, 'Calculating optimal route...');
+
+                for (const perm of permutations) {
+                    completedHaversineCalculations++;
+                    let currentHaversineDistance = 0;
+                    const currentRouteWaypoints = [startPoint, ...perm, endPoint];
+                    for (let i = 0; i < currentRouteWaypoints.length - 1; i++) {
+                        currentHaversineDistance += getHaversineDistance(currentRouteWaypoints[i], currentRouteWaypoints[i+1]);
+                    }
+
+                    topHaversineRoutes.push({
+                        haversineDistance: currentHaversineDistance,
+                        waypoints: currentRouteWaypoints,
+                        names: [startName].concat(perm.map(p => {
+                            const originalIndex = stopLatLngs.findIndex(s => s.equals(p));
+                            return stopOriginalNames[originalIndex] || `Stop ${getStopLabel(stopLatLngs.indexOf(p))}`;
+                        })).concat(endName)
                     });
-                    currentRouteNames.push(endName);
-                    optimalRouteNames = currentRouteNames;
+
+                    // Sort by Haversine distance and keep only the top N
+                    topHaversineRoutes.sort((a, b) => a.haversineDistance - b.haversineDistance);
+                    if (topHaversineRoutes.length > NUM_TOP_PERMUTATIONS_TO_CHECK) {
+                        topHaversineRoutes.pop(); // Remove the longest Haversine route
+                    }
+                    updateLoadingProgress(completedHaversineCalculations, totalPermutations, startTime, 'Calculating optimal route...');
                 }
 
-                if (routeDetails.duration > maxDuration) {
-                    maxDuration = routeDetails.duration;
+                // Phase 2 of hybrid: OSRM calls for top K
+                let completedOsrmChecks = 0;
+                const phase2StartTime = Date.now(); // Reset start time for accurate Phase 2 estimation
+                const totalOsrmChecks = topHaversineRoutes.length; // Total for this phase
+
+                // Initial update for Phase 2
+                updateLoadingProgress(completedOsrmChecks, totalOsrmChecks, phase2StartTime, 'Refining route details...');
+
+                for (const routeCandidate of topHaversineRoutes) {
+                    completedOsrmChecks++;
+                    // Update progress for Phase 2
+                    updateLoadingProgress(completedOsrmChecks, totalOsrmChecks, phase2StartTime, 'Refining route details...');
+
+                    const actualRouteDetails = await calculateRouteDetails(routeCandidate.waypoints);
+
+                    if (actualRouteDetails) {
+                        if (actualRouteDetails.duration < bestActualDuration) {
+                            bestActualDuration = actualRouteDetails.duration;
+                            finalMinDistance = (actualRouteDetails.distance / 1000).toFixed(2);
+                            finalMinDuration = (actualRouteDetails.duration / 60).toFixed(0);
+                            finalOptimalWaypoints = routeCandidate.waypoints;
+                            finalOptimalNames = routeCandidate.names;
+                        }
+                    }
                 }
-                if (routeDetails.distance < minDistance) {
-                    minDistance = routeDetails.distance;
-                }
-                if (routeDetails.distance > maxDistance) {
-                    maxDistance = routeDetails.distance;
-                }
+                hideLoading();
             }
         }
 
-        hideLoading();
 
-        if (optimalRouteWaypoints.length > 0) {
-            createRouteWithMultipleStops(optimalRouteWaypoints, optimalRouteNames);
+        // Final display and Android reporting (common to all branches)
+        if (finalOptimalWaypoints.length > 0) {
+            createRouteWithMultipleStops(finalOptimalWaypoints, finalOptimalNames);
             showToast('Optimal route found and displayed!');
 
-            const optimalWaypointOrder = optimalRouteWaypoints.map((wp, index) => ({
+            // Prepare the optimal waypoint order as a JSON string for Android
+            const optimalWaypointOrder = finalOptimalWaypoints.map((wp, index) => ({
                 lat: wp.lat,
                 lng: wp.lng,
-                name: optimalRouteNames[index] || '',
+                name: finalOptimalNames[index] || '',
                 isStartPoint: index === 0,
-                isEndPoint: index === optimalRouteWaypoints.length - 1
+                isEndPoint: index === finalOptimalWaypoints.length - 1
             }));
             const optimalWaypointOrderJson = JSON.stringify(optimalWaypointOrder);
 
             if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
                 Android.onSmartRouteCalculated(
-                    (minDistance / 1000).toFixed(2),
-                    (minDuration / 60).toFixed(0),
-                    (maxDistance / 1000).toFixed(2),
-                    (maxDuration / 60).toFixed(0),
-                    optimalRouteWaypoints.length,
+                    finalMinDistance,
+                    finalMinDuration,
+                    finalMinDistance, // Max distance will be same as min as only one route is displayed
+                    finalMinDuration, // Max duration will be same as min as only one route is displayed
+                    finalOptimalWaypoints.length,
                     optimalWaypointOrderJson
                 );
             }
             console.log('Smart Routing Complete:');
-            console.log(`Min Time: ${Math.round(minDuration / 60)} min, Min Distance: ${(minDistance / 1000).toFixed(2)} km`);
-            console.log(`Max Time: ${Math.round(maxDuration / 60)} min, Max Distance: ${(maxDistance / 1000).toFixed(2)} km`);
+            console.log(`Min Time: ${finalMinDuration} min, Min Distance: ${finalMinDistance} km`);
         } else {
             showToast('Could not find any routes for smart routing.');
-            if (typeof Android !== 'undefined' && Android.onSmartRouteCalculated) {
+            if (typeof Android !== 'undefined') {
                 Android.onSmartRouteCalculated('N/A', 'N/A', 'N/A', 'N/A', 0, "[]");
             }
         }
@@ -997,7 +1067,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         console.log('Map initialized');
         if (typeof Android !== 'undefined') {
-            Android.showToast('Map loaded successfully');
+            <!--Android.showToast('Map loaded successfully');-->
         }
     });
 </script>
