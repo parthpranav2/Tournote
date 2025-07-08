@@ -762,7 +762,7 @@ class SmartRoutePlannerFragment: Fragment() {
     }
 
     private fun loadMap() {
-        webView.loadUrl("file:///android_asset/leaflet_map.html")
+        webView.loadUrl("file:///android_asset/smartrouteplanner_map.html")
     }
 
     private fun getCurrentLocation() {

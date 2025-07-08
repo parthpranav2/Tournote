@@ -98,6 +98,8 @@ class CreateGroupRepository {
         name: String,
         description: String,
         members: List<UserModel>,
+        admins: List<UserModel>,
+        owner : String,
         groupProfileUrl: String
     ): Result<String> {
         return try {
@@ -106,6 +108,7 @@ class CreateGroupRepository {
             } else {
                 listOf(GlobalClass.Email ?: "unknown@email.com")
             }
+
 
             // Generate a unique group ID (Realtime DB)
             val groupId = realDB.getReference("groups").push().key
@@ -117,7 +120,9 @@ class CreateGroupRepository {
                 "name" to name,
                 "description" to description,
                 "profilePic" to groupProfileUrl,
-                "createdAt" to System.currentTimeMillis()
+                "owner" to sanitizer(owner),
+                "createdAt" to System.currentTimeMillis(),
+                "isGroupValid" to true
             )
 
             // Save group details under /groups/{groupId}/GroupDetails
@@ -130,15 +135,27 @@ class CreateGroupRepository {
             // Add members under /groups/{groupId}/Members
             val membersMap = mutableMapOf<String, Boolean>()
             memberEmails.forEach { email ->
-                val sanitizedEmail = email.replace(".", ",")  // Firebase keys cannot contain '.'
-                membersMap[sanitizedEmail] = true
+                membersMap[sanitizer(email)] = true
             }
+
 
             realDB.getReference("groups")
                 .child(groupId)
                 .child("Members")
                 .setValue(membersMap)
                 .await()
+
+            if (admins.isNotEmpty()) {
+                val adminsMap = admins.mapNotNull { it.email }
+                    .associate { sanitizer(it) to true }
+
+                realDB.getReference("groups")
+                    .child(groupId)
+                    .child("Admins")
+                    .setValue(adminsMap)
+                    .await()
+            }
+
 
             // Add groupId to each user's /users/{uid}/Groups/{groupId}: true
             addGroupIdToUsersByEmail(memberEmails, groupId)
@@ -169,6 +186,10 @@ class CreateGroupRepository {
         } catch (e: Exception) {
             println("Error while adding group to users: ${e.message}")
         }
+    }
+
+    fun sanitizer(input : String): String{
+        return input.replace(".", ",")  // Firebase keys cannot contain '.'
     }
 
 }

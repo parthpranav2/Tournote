@@ -191,7 +191,7 @@
             <RelativeLayout
                 android:id="@+id/relLayoutSelectedMembers"
                 android:layout_width="match_parent"
-                android:layout_height="110dp"
+                android:layout_height="130dp"
                 android:background="@drawable/background_addmembers"
                 android:layout_marginTop="10dp"
                 android:visibility="gone"

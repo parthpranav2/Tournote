@@ -21,7 +21,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
-import com.example.tournote.Onboarding.Activity.LogInActivity
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivitySignUpBinding
@@ -293,7 +292,7 @@ class SignUpActivity : AppCompatActivity() {
 
     fun phone_Dialog(name: String, email: String, userId: String) {
         phone_dialog = BottomSheetDialog(this)
-        phone_dialog.setContentView(R.layout.phone_bottom_sheet)
+        phone_dialog.setContentView(R.layout.bsfragment_phone)
         phone_dialog.setCanceledOnTouchOutside(true)
         phone_dialog.setCancelable(true)
         phone_dialog.show()

@@ -27,6 +27,7 @@ class CreateGroupFragment : Fragment() {
 
     private var selectedImageUri: Uri? = null
     private var usersIn: List<UserModel> = listOf()
+    private var admins: List<UserModel> = listOf()
 
     private var isGroupCreationPending = false
 
@@ -56,7 +57,7 @@ class CreateGroupFragment : Fragment() {
                 val groupName = binding.txtGroupName.text.toString()
                 val groupDescription = binding.txtGroupDescription.text.toString()
 
-                viewModel.createGroup(groupName, groupDescription, usersIn, url)
+                viewModel.createGroup(groupName, groupDescription, usersIn,admins ,url)
                 isGroupCreationPending = false
             }
         }
@@ -76,7 +77,7 @@ class CreateGroupFragment : Fragment() {
                     isGroupCreationPending = true
                     viewModel.uploadImageToCloudinary(selectedImageUri!!, requireContext())
                 } else {
-                    viewModel.createGroup(groupName, groupDescription, usersIn, "null")
+                    viewModel.createGroup(groupName, groupDescription, usersIn,admins, "null")
                 }
             }
         }
@@ -111,6 +112,9 @@ class CreateGroupFragment : Fragment() {
 
             binding.relLayoutSelectedMembers.visibility =
                 if (users.size<=1) View.GONE else View.VISIBLE
+        }
+        viewModel.admins.observe(viewLifecycleOwner){ users->
+            admins = users
         }
 
         binding.grpProfileImage.setOnClickListener {

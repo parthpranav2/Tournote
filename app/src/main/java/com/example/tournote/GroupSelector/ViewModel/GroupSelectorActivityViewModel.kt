@@ -36,6 +36,9 @@ class GroupSelectorActivityViewModel : ViewModel() {
     private val _usersIn = MutableLiveData<List<UserModel>>()
     val usersIn: LiveData<List<UserModel>> = _usersIn
 
+    private val _admins = MutableLiveData<List<UserModel>>()
+    val admins: LiveData<List<UserModel>> = _admins
+
     private val _error = MutableLiveData<String>()
     val error: LiveData<String> = _error
 
@@ -47,9 +50,11 @@ class GroupSelectorActivityViewModel : ViewModel() {
         _navigateToHome.value = !(_navigateToHome.value ?: false)
     }
 
+
     fun resetUiToggleSwitch(){
         _resetUI.value = !(_resetUI.value ?: false)
     }
+
 
     fun addUserToGrp(user: UserModel) {
         val current = _usersIn.value?.toMutableList() ?: mutableListOf()
@@ -69,12 +74,33 @@ class GroupSelectorActivityViewModel : ViewModel() {
         }
     }
 
-
     fun removeUserFromGrp(user: UserModel) {
         val current = _usersIn.value?.toMutableList() ?: mutableListOf()
         if (current.contains(user)) {
             current.remove(user)
             _usersIn.value = current
+        }
+    }
+
+
+    fun checkForPresence_AdminList(user: UserModel): Boolean{
+        if(_admins.value?.any { it.uid == user.uid } == true){
+            return true
+        }else{
+            return false
+        }
+    }
+
+    fun addUserToAdminList(user : UserModel){
+        val current = _admins.value?.toMutableList() ?: mutableListOf()
+        current.add(user)
+        _admins.value=current
+    }
+    fun removeUserFromAdminList(user : UserModel){
+        val current = _admins.value?.toMutableList() ?: mutableListOf()
+        if (current.contains(user)) {
+            current.remove(user)
+            _admins.value=current
         }
     }
 
@@ -85,11 +111,11 @@ class GroupSelectorActivityViewModel : ViewModel() {
     }
 
 
-    fun createGroup(name: String, description: String, members: List<UserModel>, groupProfileUrl: String) {
+    fun createGroup(name: String, description: String, members: List<UserModel>, admins: List<UserModel>, groupProfileUrl: String) {
         viewModelScope.launch {
             isLoading.value = true
             try {
-                val result = repo.registerGroup(name, description, members, groupProfileUrl)
+                val result = repo.registerGroup(name, description, members,admins, GlobalClass.Email.toString(),groupProfileUrl)
 
                 if (result.isSuccess) {
                     val groupId = result.getOrNull()

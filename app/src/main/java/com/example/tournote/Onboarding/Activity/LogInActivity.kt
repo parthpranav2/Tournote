@@ -216,7 +216,7 @@ class LogInActivity : AppCompatActivity() {
     }
     fun phone_Dialog(name: String, email: String, userId: String?) {
         phone_dialog = BottomSheetDialog(this)
-        phone_dialog.setContentView(R.layout.phone_bottom_sheet)
+        phone_dialog.setContentView(R.layout.bsfragment_phone)
         phone_dialog.setCanceledOnTouchOutside(true)
         phone_dialog.setCancelable(true)
         phone_dialog.show()
