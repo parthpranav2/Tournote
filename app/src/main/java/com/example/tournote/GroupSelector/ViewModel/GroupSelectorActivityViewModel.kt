@@ -61,7 +61,7 @@ class GroupSelectorActivityViewModel : ViewModel() {
         if (current.isEmpty()) {
             val defaultUser = UserModel(
                 uid = null,
-                email = GlobalClass.Email.toString(),
+                email = GlobalClass.Me?.email.toString(),
                 name = "(You)",
                 phoneNumber = null,
                 profilePic = null
@@ -115,7 +115,7 @@ class GroupSelectorActivityViewModel : ViewModel() {
         viewModelScope.launch {
             isLoading.value = true
             try {
-                val result = repo.registerGroup(name, description, members,admins, GlobalClass.Email.toString(),groupProfileUrl)
+                val result = repo.registerGroup(name, description, members,admins, GlobalClass.Me?.email.toString(),groupProfileUrl)
 
                 if (result.isSuccess) {
                     val groupId = result.getOrNull()

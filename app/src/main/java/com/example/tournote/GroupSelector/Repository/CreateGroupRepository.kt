@@ -106,7 +106,7 @@ class CreateGroupRepository {
             val memberEmails = if (members.isNotEmpty()) {
                 members.mapNotNull { it.email }
             } else {
-                listOf(GlobalClass.Email ?: "unknown@email.com")
+                listOf(GlobalClass.Me?.email ?: "unknown@email.com")
             }
 
 

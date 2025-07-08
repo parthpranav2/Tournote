@@ -22,7 +22,7 @@ class AddUsers_CreateGroupRecyclerViewAdapter(
 
     // Filter out the current user from the full list
     private val filteredFullUserList: List<UserModel> = fullUserList.filter { user ->
-        user.email != GlobalClass.Email
+        user.email != GlobalClass.Me?.email
     }
 
     private var filteredUserList: List<UserModel> = filteredFullUserList.toList()

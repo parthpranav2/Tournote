@@ -9,15 +9,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
+import kotlinx.coroutines.launch
 
 class CustomSplashScreen : AppCompatActivity() {
     private val authViewModel : authViewModel by viewModels()
     private lateinit var groupViewModel: GroupSelectorActivityViewModel
+
+    val repo = MainActivityRepository()
 
     private val minSplashDuration = 2000L // Minimum 2 seconds
     private val maxSplashDuration = 8000L // Maximum 8 seconds (fallback)
@@ -37,13 +42,25 @@ class CustomSplashScreen : AppCompatActivity() {
         splashStartTime = System.currentTimeMillis()
 
         if (authViewModel.repo.getuser() != null) {
-            GlobalClass.Email = authViewModel.repo.getuser()
-            // User is logged in, fetch group data before redirecting
-            initializeGroupViewModel()
+            val email = authViewModel.repo.getuser()
+            if (email != null) {
+                lifecycleScope.launch {
+                    val result = repo.getUserByMailId(email)
+                    result.onSuccess { user ->
+                        GlobalClass.Me = user
+                        initializeGroupViewModel()
+                    }.onFailure {
+                        // Handle failure (log or fallback)
+                        initializeGroupViewModel() // still continue even if user load failed
+                    }
+                }
+            } else {
+                redirectToActivityWithDelay(GettingStartedActivity::class.java, minSplashDuration)
+            }
         } else {
-            // User is not logged in, redirect to GettingStartedActivity after minimum duration
             redirectToActivityWithDelay(GettingStartedActivity::class.java, minSplashDuration)
         }
+
     }
 
     private fun initializeGroupViewModel() {

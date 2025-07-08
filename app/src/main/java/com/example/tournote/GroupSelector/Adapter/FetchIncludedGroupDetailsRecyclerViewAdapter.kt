@@ -11,16 +11,22 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Activity.MainActivity
+import com.example.tournote.Functionality.Repository.MainActivityRepository
+import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 class FetchIncludedGroupDetailsRecyclerViewAdapter(
     private val context: Context,
-    private val viewModel: GroupSelectorActivityViewModel
+    private val viewModel: GroupSelectorActivityViewModel,
+    private val coroutineScope: CoroutineScope  // 🔥 add this
 ) : RecyclerView.Adapter<FetchIncludedGroupDetailsRecyclerViewAdapter.ViewHolder>() {
 
     private var groupList: List<GroupInfoModel> = emptyList()
+    val repo2 = MainActivityRepository()
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val profilePhoto: ImageView = itemView.findViewById(R.id.imgProfilePic)
@@ -50,10 +56,19 @@ class FetchIncludedGroupDetailsRecyclerViewAdapter(
         }
 
         holder.clickable.setOnClickListener {
-            val intent = Intent(context, MainActivity::class.java)
-            intent.putExtra("GROUP_ID", group.groupid ?: "")
-            context.startActivity(intent)
+            coroutineScope.launch {
+                val result = repo2.groupData(group.groupid ?: "")
+                result.onSuccess { groupData ->
+                    GlobalClass.GroupDetails_Everything = groupData
+                    val intent = Intent(context, MainActivity::class.java)
+                    //intent.putExtra("GROUP_ID", group.groupid ?: "")
+                    context.startActivity(intent)
+                }.onFailure {
+                    // Optional: show error
+                }
+            }
         }
+
     }
 
     override fun getItemCount(): Int = groupList.size

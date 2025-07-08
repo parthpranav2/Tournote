@@ -8,40 +8,36 @@ import com.example.tournote.Functionality.Segments.ChatRoom.Repository.ChatRepos
 import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
+import com.example.tournote.GroupData_Detailed_Model
 import kotlinx.coroutines.launch
 
-class MainActivityViewModel: ViewModel() {
+class MainActivityViewModel : ViewModel() {
 
-    val repo = MainActivityRepository()
+    private val repo = MainActivityRepository()
     val chatRepo = ChatRepository()
     val chatView = ChatViewModel()
 
+    private val _groupInfo = MutableLiveData<Result<GroupData_Detailed_Model>>()
+    val groupInfo: LiveData<Result<GroupData_Detailed_Model>> = _groupInfo
 
+    private val _groupId = MutableLiveData<String?>(null)
+    val groupId: LiveData<String?> = _groupId
 
-    private val _groupInfo = MutableLiveData<Result<GroupInfoModel>>()
-    val groupInfo: LiveData<Result<GroupInfoModel>> = _groupInfo
-
-    private val _groupId = MutableLiveData<String>(null)
-    val groupId: LiveData<String> = _groupId
-
-    init {
-        chatRepo.connectSocket(GlobalClass.group_id!!)
-    }
-
-
-    fun loadGroup(groupId: String) {
+    fun loadGroup() {
         viewModelScope.launch {
-            _groupId.value=groupId
-            val result = repo.groupData(groupId)
-            _groupInfo.value = result
+            val group = GlobalClass.GroupDetails_Everything
+
+            _groupId.value = group.groupID
+            _groupInfo.value = Result.success(group)
+
+            // 🔐 Now safe to call after data is ready
+            chatRepo.connectSocket(group.groupID!!)
         }
     }
 
     fun loadChatRoom() {
         viewModelScope.launch {
-            chatView.joinROOM(groupId.toString())
+            chatView.joinROOM(GlobalClass.GroupDetails_Everything.groupID!!)
         }
     }
-
 }

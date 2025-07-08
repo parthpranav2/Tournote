@@ -719,7 +719,7 @@ class SmartRoutePlannerFragment: Fragment() {
     }
 
     private fun setupWebView() {
-        webView = binding.leafletWebView
+        webView = binding.WebView
         webView.settings.apply {
             javaScriptEnabled = true
             domStorageEnabled = true

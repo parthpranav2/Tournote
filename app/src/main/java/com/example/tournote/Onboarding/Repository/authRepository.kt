@@ -1,6 +1,7 @@
 package com.example.tournote.Onboarding.Repository
 
 import android.util.Log
+import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
@@ -22,12 +23,22 @@ class authRepository {
     val firebaseAuth = FirebaseAuth.getInstance()
     val db = Firebase.firestore
     val realDB = Firebase.database
+    val repo1 = MainActivityRepository()
 
 
     suspend fun custom_login(email: String, pass: String): Result<AuthResult> {
         return try {
             val result = firebaseAuth.signInWithEmailAndPassword(email,pass).await()
-            GlobalClass.Email=email
+
+            if (email != null) {
+                val result = repo1.getUserByMailId(email ?: "")
+                result.onSuccess { user ->
+                    GlobalClass.Me = user
+                }.onFailure {
+                    Log.e("authViewModel", "Failed to fetch user: ${it.message}")
+                }
+            }
+
             Log.d("authRepository", "Signup success: ${result.user?.email}")
             Result.success(result)
         } catch (e: Exception) {
@@ -41,7 +52,7 @@ class authRepository {
             val result = firebaseAuth
                 .createUserWithEmailAndPassword(email, pass)
                 .await()
-            GlobalClass.Email=email
+            //GlobalClass.Email=email
             Log.d("authRepository", "Signup success: ${result.user?.email}")
             Result.success(result)
         } catch (e: Exception) {

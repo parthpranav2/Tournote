@@ -42,14 +42,17 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-
-
-        val groupId = intent.getStringExtra("GROUP_ID")
-        GlobalClass.group_id = groupId
-        viewModel.loadGroup(groupId.toString())
+        viewModel.loadGroup()
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        //val groupId = intent.getStringExtra("GROUP_ID")
+        if(GlobalClass.GroupDetails_Everything.isGroupValid?:false){
+            binding.btnTrackGroupMates.visibility=View.VISIBLE
+        }else{
+            binding.btnTrackGroupMates.visibility=View.GONE
+        }
 
         // Check and request location permission
         checkLocationPermission()

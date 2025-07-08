@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Track Friends Map</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Custom marker styling */
+        .custom-marker {
+            /* This div itself now defines the area that will contain the centered image and ripples */
+            width: 60px; /* Base size of the visible marker area */
+            height: 80px; /* Increased height to accommodate pointer and dot */
+            position: relative;
+            /* Position the entire custom-marker div so its center is at the map coordinate */
+            transform: translate(-50%, -100%); /* Changed to position dot at the exact location */
+            display: flex; /* Use flexbox to easily center content */
+            flex-direction: column; /* Stack elements vertically */
+            justify-content: flex-start;
+            align-items: center;
+            /* Ensure the marker background itself is circular if needed, but not required for image */
+            /* border-radius: 50%; */ /* Only if the *marker background* should be circular */
+        }
+
+        .custom-marker img {
+            width: 48px; /* Fixed width */
+            height: 48px; /* Fixed height - same as width for perfect circle */
+            border-radius: 50%; /* Perfect circle */
+            border: 2px solid #fff; /* White border around the image */
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+            object-fit: cover; /* Crop image to fill circle */
+            object-position: center center; /* Center the image within the circle */
+            display: block; /* Remove inline spacing */
+            flex-shrink: 0; /* Prevent flexbox shrinking */
+            min-width: 48px; /* Ensure minimum width */
+            min-height: 48px; /* Ensure minimum height */
+            max-width: 48px; /* Ensure maximum width */
+            max-height: 48px; /* Ensure maximum height */
+            z-index: 2; /* Ensure image is on top of ripples */
+            position: relative; /* For positioning within the marker */
+        }
+
+        /* Pointer/Arrow below the image */
+        .marker-pointer {
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid #fff;
+            margin-top: 2px;
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+        }
+
+        /* Location dot at the exact position */
+        .location-dot {
+            width: 8px;
+            height: 8px;
+            background-color: #ff4444;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            box-shadow: 0 0 3px rgba(0,0,0,0.5);
+            margin-top: 2px;
+        }
+
+        /* Ripple/Signal Animation */
+        .ripple {
+            position: absolute; /* Position ripples relative to .custom-marker */
+            border-radius: 50%;
+            background-color: rgba(0, 128, 0, 0.4); /* Green color with transparency */
+            animation: ripple-animation 3s infinite; /* CHANGED: Animation duration to 3s */
+            z-index: 1; /* Below the image */
+            /* Center the ripples around the image circle */
+            top: 24px; /* Center on the 48px image (24px is center) */
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .ripple.ripple-1 {
+            animation-delay: 0s;
+        }
+        .ripple.ripple-2 {
+            animation-delay: 1s; /* Adjusted delay for smoother, slower sequence */
+        }
+        .ripple.ripple-3 {
+            animation-delay: 2s; /* Adjusted delay for smoother, slower sequence */
+        }
+
+
+        @keyframes ripple-animation {
+            0% {
+                width: 48px; /* Start from profile image size */
+                height: 48px;
+                opacity: 1;
+            }
+            100% {
+                width: 100px; /* Max size for the ripple */
+                height: 100px;
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+        crossorigin=""></script>
+<script>
+    // Initialize the map without a default view and disable zoom controls
+    var map = L.map('map', {
+        zoomControl: false // Disable zoom controls
+    });
+
+    // Add OpenStreetMap tiles
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    // Set a default view for the map to ensure it loads
+    map.setView([21.1458, 79.0882], 5); // Default to a reasonable zoom level for a country view
+
+    // Custom icon function that generates a divIcon with image and ripples
+    function createProfilePicIcon(profilePicUrl) {
+        return L.divIcon({
+            className: 'custom-marker',
+            html: `
+                <img src="${profilePicUrl || 'https://via.placeholder.com/48/0000FF/FFFFFF?text=?'}" alt="Profile">
+                <div class="marker-pointer"></div>
+                <div class="location-dot"></div>
+                <div class="ripple ripple-1"></div>
+                <div class="ripple ripple-2"></div>
+                <div class="ripple ripple-3"></div>
+            `,
+            iconSize: [60, 80], /* Updated to match new marker height */
+            iconAnchor: [30, 80] /* Anchor at the bottom center (where the dot is) */
+        });
+    }
+
+    // Store markers for easy access
+    var friendMarkers = {};
+    var userMarker = null;
+
+    // Function to set user location (called from Android)
+    function setUserLocation(lat, lng, profilePicUrl) {
+        // Remove existing user marker if any
+        if (userMarker) {
+            map.removeLayer(userMarker);
+        }
+
+        // Center map on user's location
+        map.setView([lat, lng], 13);
+
+        // Add marker for user's location using the custom icon
+        userMarker = L.marker([lat, lng], {icon: createProfilePicIcon(profilePicUrl)}).addTo(map);
+
+        // Create detailed popup content
+        var popupContent = '<div>' +
+            '<b>📍 Your Current Location</b><br>' +
+            '🌍 Coordinates: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '<br>' +
+            '📱 Source: Android GPS<br>' +
+            '⏰ Updated: ' + new Date().toLocaleTimeString() +
+            '</div>';
+
+        userMarker.bindPopup(popupContent);
+
+        // Reverse geocoding to get address (optional)
+        reverseGeocode(lat, lng);
+    }
+
+    // Function to get address from coordinates (reverse geocoding)
+    function reverseGeocode(lat, lng) {
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+            .then(response => response.json())
+            .then(data => {
+                if (data && data.display_name) {
+                    var address = data.display_name;
+
+                    // Update marker popup with address
+                    if (userMarker) {
+                        var popupContent = '<div>' +
+                            '<b>📍 Your Current Location</b><br>' +
+                            '🌍 Coordinates: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '<br>' +
+                            '📍 Address: ' + address + '<br>' +
+                            '📱 Source: Android GPS<br>' +
+                            '⏰ Updated: ' + new Date().toLocaleTimeString() +
+                            '</div>';
+                        userMarker.getPopup().setContent(popupContent);
+                    }
+                }
+            })
+            .catch(error => {
+                console.log('Reverse geocoding failed:', error);
+            });
+    }
+
+    // Function to add a new friend marker (can be called from Android)
+    function addFriendMarker(id, name, lat, lng, status, profilePicUrl) {
+        if (friendMarkers[id]) {
+            map.removeLayer(friendMarkers[id]);
+        }
+
+        var marker = L.marker([lat, lng], {icon: createProfilePicIcon(profilePicUrl)}).addTo(map);
+        var popupContent = '<div>' +
+            '<b>👤 ' + name + '</b><br>' +
+            '🟢 Status: ' + (status || 'online') + '<br>' +
+            '📍 Lat: ' + lat.toFixed(4) + ', Lng: ' + lng.toFixed(4) + '<br>' +
+            '<small>⏰ Last seen: Just now</small>' +
+            '</div>';
+        marker.bindPopup(popupContent);
+        friendMarkers[id] = marker;
+    }
+
+    // Function to update friend's location
+    function updateFriendLocation(id, lat, lng, status, profilePicUrl) {
+        if (friendMarkers[id]) {
+            var marker = friendMarkers[id];
+            marker.setLatLng([lat, lng]);
+
+            // If the profile picture might change, re-create the icon, otherwise just update lat/lng
+            if (profilePicUrl) {
+                 marker.setIcon(createProfilePicIcon(profilePicUrl));
+            }
+
+            // Update popup content
+            var name = "Friend " + id;
+            var popupContent = '<div>' +
+                '<b>👤 ' + name + '</b><br>' +
+                '🟢 Status: ' + (status || 'online') + '<br>' +
+                '📍 Lat: ' + lat.toFixed(4) + ', Lng: ' + lng.toFixed(4) + '<br>' +
+                '<small>⏰ Last seen: Just now</small>' +
+                '</div>';
+            marker.getPopup().setContent(popupContent);
+        } else {
+            addFriendMarker(id, "Friend " + id, lat, lng, status, profilePicUrl);
+        }
+    }
+
+    // Function to remove friend marker
+    function removeFriendMarker(id) {
+        if (friendMarkers[id]) {
+            map.removeLayer(friendMarkers[id]);
+            delete friendMarkers[id];
+        }
+    }
+
+    // Function to center map on specific coordinates
+    function centerMap(lat, lng, zoom) {
+        map.setView([lat, lng], zoom || 13);
+    }
+
+    // Map event listeners
+    map.on('moveend', function() {
+        console.log('Map moved to: ' + map.getCenter());
+    });
+
+    map.on('zoomend', function() {
+        console.log('Map zoom level: ' + map.getZoom());
+    });
+
+    // Auto-refresh location every 30 seconds (optional) - popup content only
+    setInterval(function() {
+        if (userMarker && userMarker.getPopup().isOpen()) { // Only update if popup is open
+            var popup = userMarker.getPopup();
+            if (popup) {
+                var content = popup.getContent();
+                var updatedContent = content.replace(/⏰ Updated: .*?<\/div>/, '⏰ Updated: ' + new Date().toLocaleTimeString() + '</div>');
+                popup.setContent(updatedContent);
+            }
+        }
+    }, 30000);
+</script>
+</body>
+</html>

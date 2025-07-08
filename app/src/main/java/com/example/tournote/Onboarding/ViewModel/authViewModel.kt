@@ -6,12 +6,15 @@ import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewModelScope
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
+import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
 import com.example.tournote.Onboarding.Repository.authRepository
+import com.example.tournote.UserModel
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseUser
@@ -24,6 +27,7 @@ class authViewModel: ViewModel() {
     val loginError = MutableLiveData<String?>()
     val isLoading = MutableLiveData<Boolean>()
 
+    val repo1 = MainActivityRepository()
 
     private val _toastmsg = MutableLiveData<String?>(null)
     val toastmsg : LiveData<String?> get() = _toastmsg
@@ -59,7 +63,15 @@ class authViewModel: ViewModel() {
             val result = repo.firebaseLoginWithGoogle(account)
             if (result != null) {
                 //GlobalClass.uid=result.uid
-                GlobalClass.Email=result.email
+                if (account != null) {
+                    val result = repo1.getUserByMailId(account.email ?: "")
+                    result.onSuccess { user ->
+                        GlobalClass.Me = user
+                    }.onFailure {
+                        Log.e("authViewModel", "Failed to fetch user: ${it.message}")
+                    }
+                }
+
                 _googleResponse.value = result
             } else {
                 _googleResponse.value = null
@@ -72,7 +84,15 @@ class authViewModel: ViewModel() {
             isLoading.value = true
             val result = repo.custom_login(email, pass)
             if (result.isSuccess){
-                GlobalClass.Email=email
+                if (email != null) {
+                    val result = repo1.getUserByMailId(email ?: "")
+                    result.onSuccess { user ->
+                        GlobalClass.Me = user
+                    }.onFailure {
+                        Log.e("authViewModel", "Failed to fetch user: ${it.message}")
+                    }
+                }
+
                 _toastmsg.value = "Login Successful"
                 isLoading.value= false
                 _navigateToMain.value = true
@@ -110,7 +130,13 @@ class authViewModel: ViewModel() {
                 val result = repo.userDetailsToFirestore(userId, userMap)
                 if (result.isSuccess) {
                     isLoading.value = false
-                    GlobalClass.Email=email
+                    GlobalClass.Me = UserModel(
+                        uid = userId,
+                        email = email,
+                        name = name,
+                        phoneNumber = phone,
+                        profilePic = profilePicUrl
+                    )
                     _toastmsg.value = "sign up successful"
                     _navigateToMain.value = true
                 } else {

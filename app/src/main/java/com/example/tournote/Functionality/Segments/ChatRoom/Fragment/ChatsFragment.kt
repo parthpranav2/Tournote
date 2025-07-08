@@ -58,7 +58,7 @@ class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
             stackFromEnd = true
         }
 
-        chatViewModel.getAllMsgFromDB(GlobalClass.group_id?:"",requireContext())
+        chatViewModel.getAllMsgFromDB(GlobalClass.GroupDetails_Everything.groupID?:"",requireContext())
         chatViewModel.messages.observe(viewLifecycleOwner) { messages ->
             val updated_msg = processMessages(messages)
             val itemList = chatViewModel.groupMessagesByDate(updated_msg)
@@ -236,10 +236,10 @@ class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
                 val userID = authViewmodel.repo.getUid()
                 if (userID != null) {
                     val user_data = authViewmodel.repo.userDetailGetLogin(userID)
-                    if (user_data != null && GlobalClass.group_id != null) {
+                    if (user_data != null && GlobalClass.GroupDetails_Everything.groupID != null) {
                         val user_name = user_data.child("name").value.toString()
                         val profile_url: String? = user_data.child("profilePic").value.toString()
-                        val group_id = GlobalClass.group_id
+                        val group_id = GlobalClass.GroupDetails_Everything.groupID
                         val msg_id = chatViewModel.generateShortMessageId()
                         val msg = ChatMessage(
                             msg_content,
