@@ -25,7 +25,7 @@ class MainActivityRepository {
             val description = groupDetails["description"] as? String
             val profilePic = groupDetails["profilePic"] as? String
             val ownerID = groupDetails["owner"] as? String
-            val createdAt = groupDetails["createdAt"]?.toString()
+            val createdAt = groupDetails["createdAt"] as? Long
             val groupID = groupDetails["groupId"] as? String ?: groupId
 
             // 2. Get raw member/admin email keys (unsanitized, with `,`)

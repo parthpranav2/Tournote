@@ -1,6 +1,7 @@
 package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
 
 import android.content.Context
+import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -15,6 +16,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatItem
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
+import com.example.tournote.Functionality.Segments.ChatRoom.activityProfileInfo
 import com.example.tournote.R
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -151,10 +153,10 @@ class ChatAdapter(val context: Context): ListAdapter<ChatItem, RecyclerView.View
             // Show profile image logic
             val isLastOfUserStreak = isLastMessageOfStreak(position, message.user_id)
             if (isLastOfUserStreak){
-                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_bot)
+                body?.background= ContextCompat.getDrawable(context,R.drawable.bg_message_bot)
                 profilePicImageView.visibility = View.VISIBLE
             }else{
-                body.background= ContextCompat.getDrawable(context,R.drawable.bg_message_streak_bot)
+                body?.background= ContextCompat.getDrawable(context,R.drawable.bg_message_streak_bot)
                 profilePicImageView.visibility = View.INVISIBLE
             }
 
@@ -171,6 +173,7 @@ class ChatAdapter(val context: Context): ListAdapter<ChatItem, RecyclerView.View
                 .into(profilePicImageView)
         }
     }
+
 
     private fun isFirstMessageOfStreak(position: Int, userId: String?): Boolean {
         // If it's the first message in the list, it's definitely first of a streak
