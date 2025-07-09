@@ -1,6 +1,7 @@
-package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
+package com.example.tournote.Functionality.Adapter
 
 import android.content.Context
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,11 +10,11 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.Segments.ChatRoom.activityProfileInfo
+import com.example.tournote.Functionality.Activity.activityProfileInfo
 import com.example.tournote.R
 import com.example.tournote.UserModel
 
-class grpAdminsAdapter(val adminList: MutableList<UserModel>, val context: Context) : RecyclerView.Adapter<grpAdminsAdapter.ViewHolder>() {
+class grpOwnerAdapter(val ownerList: MutableList<UserModel>,val context: Context) : RecyclerView.Adapter<grpOwnerAdapter.ViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -27,9 +28,10 @@ class grpAdminsAdapter(val adminList: MutableList<UserModel>, val context: Conte
         holder: ViewHolder,
         position: Int
     ) {
-        val grp = adminList[position]
+        val grp = ownerList[position]
         holder.memberName.text = grp.name
         holder.adminBadge.visibility =  View.VISIBLE
+        holder.adminBadge.setText("Owner")
         holder.itemView.setOnClickListener {
             setOnItemClickListener(grp)
         }
@@ -41,23 +43,23 @@ class grpAdminsAdapter(val adminList: MutableList<UserModel>, val context: Conte
     }
 
     fun updateList(newList: List<UserModel>) {
-        adminList.clear()
-        adminList.addAll(newList)
+        ownerList.clear()
+        ownerList.addAll(newList)
         notifyDataSetChanged()
     }
     fun setOnItemClickListener(data: UserModel) {
-        val intent = android.content.Intent(context, activityProfileInfo::class.java)
+        val intent = Intent(context, activityProfileInfo::class.java)
         intent.putExtra("user", data)
         startActivity(context, intent, null)
     }
-
     override fun getItemCount(): Int {
-        return adminList.size
+        return ownerList.size
     }
 
-    class ViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView){
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         val memberName = itemView.findViewById<TextView>(R.id.txtMemberName)
         val memberPic = itemView.findViewById<ImageView>(R.id.imgMemberProfile)
         val adminBadge = itemView.findViewById<TextView>(R.id.txtAdminBadge)
     }
+
 }

@@ -83,6 +83,7 @@ class authRepository {
         return firebaseAuth.currentUser?.uid
     }
 
+
     suspend fun firebaseLoginWithGoogle(account: GoogleSignInAccount): FirebaseUser? {
         return try {
             val credential = GoogleAuthProvider.getCredential(account.idToken, null)

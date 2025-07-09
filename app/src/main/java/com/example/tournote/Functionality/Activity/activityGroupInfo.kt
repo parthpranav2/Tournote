@@ -1,30 +1,34 @@
-package com.example.tournote.Functionality.Segments.ChatRoom
+package com.example.tournote.Functionality.Activity
 
+import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.View
-import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.ConcatAdapter
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.Segments.ChatRoom.Adapter.grpAdminsAdapter
-import com.example.tournote.Functionality.Segments.ChatRoom.Adapter.grpMemberAdapter
-import com.example.tournote.Functionality.Segments.ChatRoom.Adapter.grpOwnerAdapter
+import com.example.tournote.Functionality.Repository.MainActivityRepository
+import com.example.tournote.Functionality.Adapter.grpAdminsAdapter
+import com.example.tournote.Functionality.Adapter.grpMemberAdapter
+import com.example.tournote.Functionality.Adapter.grpOwnerAdapter
 import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.groupViewModel
 import com.example.tournote.GlobalClass
+import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
 import com.example.tournote.R
-import com.example.tournote.UserModel
 import com.example.tournote.databinding.ActivityGroupInfoBinding
+import kotlinx.coroutines.launch
 
 class activityGroupInfo : AppCompatActivity() {
     private lateinit var binding: ActivityGroupInfoBinding
     private var MemberList = listOf<String>()
     private val viewModel: groupViewModel by viewModels()
+
+    private val mainRepo = MainActivityRepository()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -39,10 +43,46 @@ class activityGroupInfo : AppCompatActivity() {
         val userId = viewModel.authrepo.getUid()
 
         val grpData = GlobalClass.GroupDetails_Everything
+        val currentUser = GlobalClass.Me // Local immutable copy for smart cast
 
-        if (userId == grpData.owner.uid) {
-            binding.btnDeleteGroup.visibility = View.VISIBLE
+        // Ensure currentUserEmail is derived from the local copy
+        val currentUserEmail = currentUser?.email
+
+        val isTracked = (currentUserEmail != null &&
+                grpData.trackFriends?.contains(currentUserEmail) == true)
+
+        binding.btnLeaveGroup.setOnClickListener {
+            lifecycleScope.launch {
+                mainRepo.LeaveCurrentGroup()
+                redirectToActivity(GroupSelectorActivity::class.java)
+            }
         }
+
+        lifecycleScope.launch {
+            if (isTracked && currentUser?.uid != grpData.owner.uid) {
+                binding.btnDisableTracking.visibility = View.VISIBLE
+
+                binding.btnDisableTracking.setOnClickListener {
+                    lifecycleScope.launch {
+                        mainRepo.DisableMyTrackingOnCurrentGroup() // This updates Firebase
+                        binding.btnDisableTracking.visibility = View.GONE
+
+                        val currentTrackFriends = grpData.trackFriends?.toMutableList()
+
+                        if (currentUserEmail != null && currentTrackFriends != null) {
+                            if (currentTrackFriends.remove(currentUserEmail)) {
+                                GlobalClass.GroupDetails_Everything = grpData.copy(
+                                    trackFriends = currentTrackFriends
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                binding.btnDisableTracking.visibility = View.GONE
+            }
+        }
+
 
         binding.txtGroupName.text = grpData.name
         binding.txtGroupDescription.text = grpData.description
@@ -78,5 +118,11 @@ class activityGroupInfo : AppCompatActivity() {
         }
 
 
+    }
+
+    private fun redirectToActivity(activityClass: Class<*>) {
+        val intent = Intent(this, activityClass)
+        startActivity(intent)
+        finish()
     }
 }

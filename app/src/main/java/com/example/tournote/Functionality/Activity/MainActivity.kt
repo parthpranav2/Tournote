@@ -23,11 +23,9 @@ import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
 import com.example.tournote.Functionality.Segments.ChatRoom.Interface.MenuActionHandler
 import com.example.tournote.Functionality.Segments.ChatRoom.Object.SocketManager
 import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
-import com.example.tournote.Functionality.Segments.ChatRoom.activityGroupInfo
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.GlobalClass
 import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import com.example.tournote.R
 import com.example.tournote.databinding.ActivityMainBinding
 

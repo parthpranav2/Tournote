@@ -1,7 +1,6 @@
 package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
 
 import android.content.Context
-import android.content.Intent
 import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
@@ -16,7 +15,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatItem
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.ChatMessage
-import com.example.tournote.Functionality.Segments.ChatRoom.activityProfileInfo
 import com.example.tournote.R
 import java.text.SimpleDateFormat
 import java.util.Date

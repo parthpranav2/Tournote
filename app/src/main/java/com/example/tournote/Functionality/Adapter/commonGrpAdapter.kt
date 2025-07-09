@@ -1,5 +1,6 @@
-package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
+package com.example.tournote.Functionality.Adapter
 
+import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,7 +11,7 @@ import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.GroupMemberData
 import com.example.tournote.R
 
-class commonGrpAdapter(val grpMemberList: List<GroupMemberData>,val context: android.content.Context) : RecyclerView.Adapter<commonGrpAdapter.GroupMemberViewHolder>() {
+class commonGrpAdapter(val grpMemberList: List<GroupMemberData>,val context: Context) : RecyclerView.Adapter<commonGrpAdapter.GroupMemberViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int

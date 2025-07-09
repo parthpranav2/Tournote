@@ -1,20 +1,20 @@
-package com.example.tournote.Functionality.Segments.ChatRoom.Adapter
+package com.example.tournote.Functionality.Adapter
 
+import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.GroupMemberData
-import com.example.tournote.Functionality.Segments.ChatRoom.activityProfileInfo
+import com.example.tournote.Functionality.Activity.activityProfileInfo
 import com.example.tournote.R
 import com.example.tournote.UserModel
 
-class grpMemberAdapter(val grpList: MutableList<UserModel>, val context: android.content.Context) : RecyclerView.Adapter<grpMemberAdapter.ViewHolder>() {
+class grpMemberAdapter(val grpList: MutableList<UserModel>, val context: Context) : RecyclerView.Adapter<grpMemberAdapter.ViewHolder>() {
     override fun onCreateViewHolder(
         parent: ViewGroup,
         viewType: Int
@@ -36,6 +36,7 @@ class grpMemberAdapter(val grpList: MutableList<UserModel>, val context: android
 
         holder.itemView.setOnClickListener {
             Log.d("grpadapter", "Member clicked: ${user.name}")
+
             val intent = Intent(context, activityProfileInfo::class.java)
             intent.putExtra("user", user)
             context.startActivity(intent)
@@ -53,7 +54,7 @@ class grpMemberAdapter(val grpList: MutableList<UserModel>, val context: android
         return grpList.size
     }
 
-    class ViewHolder(itemView: android.view.View) : RecyclerView.ViewHolder(itemView){
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         val memberName = itemView.findViewById<TextView>(R.id.txtMemberName)
         val memberPic = itemView.findViewById<ImageView>(R.id.imgMemberProfile)
     }

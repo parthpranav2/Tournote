@@ -8,12 +8,40 @@
     android:background="@color/green_theme_Light">
 
     <FrameLayout
+        android:id="@+id/relPermissions"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_constraintTop_toBottomOf="@id/relWaypoints"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:background="@color/green_theme_Light_taskbar"
+        >
+        <RelativeLayout
+            android:id="@+id/btnPermission"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:layout_marginTop="30dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:layout_marginHorizontal="20dp"
+            android:background="@drawable/greenbutton"
+            >
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Give location track access"
+                android:textColor="@color/black"
+                android:layout_centerInParent="true"
+                android:textStyle="bold"
+                android:textSize="18sp"
+                />
+        </RelativeLayout>
+    </FrameLayout>
+
+
+    <FrameLayout
+        android:id="@+id/relWebView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        >
 
         <WebView
             android:id="@+id/WebView"
