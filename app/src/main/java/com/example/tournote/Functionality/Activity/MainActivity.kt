@@ -7,8 +7,6 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.widget.ImageButton
-import android.widget.PopupMenu
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -17,25 +15,20 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
 import com.example.tournote.Functionality.Adapter.FunctionalityPagerAdapter
-import com.example.tournote.Functionality.Segments.ChatRoom.Interface.MenuActionHandler
 import com.example.tournote.Functionality.Segments.ChatRoom.Object.SocketManager
-import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
 import com.example.tournote.Functionality.ViewModel.MainActivityViewModel
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
+import com.example.tournote.Groups.Activity.GroupSelectorActivity
 import com.example.tournote.R
 import com.example.tournote.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewPager: ViewPager2
-    lateinit var moreOptions: ImageButton
     private val viewModel: MainActivityViewModel by viewModels()
-    private val chatViewModel: ChatViewModel by viewModels()
-    private val isChatsOpen = false
+
     private val LOCATION_PERMISSION_REQUEST_CODE = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,52 +40,22 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        viewModel.loadGroupValidity(GlobalClass.GroupDetails_Everything.isGroupValid?:true)
+
         //val groupId = intent.getStringExtra("GROUP_ID")
-        if(GlobalClass.GroupDetails_Everything.isGroupValid?:false){
-            binding.btnTrackGroupMates.visibility=View.VISIBLE
-        }else{
-            binding.btnTrackGroupMates.visibility=View.GONE
+        viewModel.isGroupValid.observe(this){valid->
+            if(valid?:true){
+                binding.btnTrackGroupMates.visibility=View.VISIBLE
+            }else{
+                binding.btnTrackGroupMates.visibility=View.GONE
+            }
         }
 
         // Check and request location permission
         checkLocationPermission()
 
+        window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.white)
         window.navigationBarColor = ContextCompat.getColor(this, R.color.green_theme_Light_taskbar)
-
-        val group_logo = binding.grpLogo
-        val group_name = binding.grpName
-        moreOptions = findViewById(R.id.more_options)
-
-        moreOptions.setOnClickListener {
-            showPopupMenu(it)
-        }
-
-        binding.toolbar.setOnClickListener {
-            val intent = Intent(this, activityGroupInfo::class.java)
-            intent.putExtra("GROUP_ID", GlobalClass.GroupDetails_Everything.groupID)
-            startActivity(intent)
-        }
-
-        viewModel.groupInfo.observe(this){
-            it.onSuccess {
-                group_name.text = it.name ?: "Unknown Group"
-                Log.d("grpname", "grpname: ${it.name}")
-                if (it.profilePic == "null" || it.profilePic.isNullOrBlank()) {
-                    group_logo.setImageResource(R.drawable.defaultgroupimage)
-                } else {
-                    // Load the image using Glide or any other image loading library
-                    com.bumptech.glide.Glide.with(this)
-                        .load(it.profilePic)
-                        .placeholder(R.drawable.defaultgroupimage)
-                        .error(R.drawable.defaultgroupimage)
-                        .into(group_logo)
-                }
-            }
-            it.onFailure {
-                group_name.text = "Error loading group name"
-                group_logo.setImageResource(R.drawable.defaultgroupimage)
-            }
-        }
 
         viewPager = binding.viewPager
         viewPager.adapter = FunctionalityPagerAdapter(this)
@@ -104,7 +67,7 @@ class MainActivity : AppCompatActivity() {
         binding.viewPager.isUserInputEnabled = false
         binding.viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
+                //super.onPageSelected(position)
                 // Triggered when a new page becomes selected
                 when (position) {
                     0 -> {
@@ -114,7 +77,6 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
-                        binding.toolbar.visibility=View.GONE
                         window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.white)
                         binding.bottomButtons.visibility = View.VISIBLE
 
@@ -131,7 +93,6 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
-                        binding.toolbar.visibility=View.VISIBLE
                         window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.VISIBLE
 
@@ -148,7 +109,6 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
-                        binding.toolbar.visibility=View.VISIBLE
                         window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.VISIBLE
 
@@ -165,7 +125,6 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsnotactive)
 
-                        binding.toolbar.visibility=View.VISIBLE
                         window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.green_theme_Light_taskbar)
                         binding.bottomButtons.visibility = View.GONE
 
@@ -182,7 +141,6 @@ class MainActivity : AppCompatActivity() {
                         binding.imgMemories.setImageResource(R.drawable.memoriesnotactive)
                         binding.imgTrackGroupMates.setImageResource(R.drawable.trackfriendsactive)
 
-                        binding.toolbar.visibility=View.GONE
                         window.statusBarColor = ContextCompat.getColor(this@MainActivity, R.color.white)
                         binding.bottomButtons.visibility = View.VISIBLE
 
@@ -305,39 +263,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
-        if (viewPager.currentItem == 3) {
-            viewPager.currentItem = 0
-        } else {
-            redirectToActivity(GroupSelectorActivity::class.java)
-        }
+        redirectToActivity(GroupSelectorActivity::class.java)
     }
 
     override fun onStop() {
         super.onStop()
         Log.d("ChatDebug", "socket disconnected")
         SocketManager.disconnect()
-    }
-
-    private fun showPopupMenu(anchor: View) {
-        val popup = PopupMenu(this, anchor)
-        popup.menuInflater.inflate(R.menu.menu_chat, popup.menu)
-
-        popup.setOnMenuItemClickListener { item ->
-            val currentFragment = getCurrentFragment()
-            if (currentFragment is MenuActionHandler) {
-                currentFragment.onMenuActionSelected(item.itemId)
-                true
-            } else {
-                false
-            }
-        }
-
-        popup.show()
-    }
-
-    fun getCurrentFragment(): Fragment? {
-        val fragmentTag = "f" + binding.viewPager.currentItem
-        return supportFragmentManager.findFragmentByTag(fragmentTag)
     }
 
 

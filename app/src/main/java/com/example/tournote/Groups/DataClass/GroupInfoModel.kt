@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.DataClass
+package com.example.tournote.Groups.DataClass
 
 data class GroupInfoModel(
     val groupid: String? = null,

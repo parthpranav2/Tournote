@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 class MainActivityViewModel : ViewModel() {
 
+
     private val repo = MainActivityRepository()
     val chatRepo = ChatRepository()
     val chatView = ChatViewModel()
@@ -22,6 +23,9 @@ class MainActivityViewModel : ViewModel() {
 
     private val _groupId = MutableLiveData<String?>(null)
     val groupId: LiveData<String?> = _groupId
+
+    private val _isGroupValid = MutableLiveData<Boolean?>(true)
+    val isGroupValid: LiveData<Boolean?> = _isGroupValid
 
     fun loadGroup() {
         viewModelScope.launch {
@@ -33,6 +37,13 @@ class MainActivityViewModel : ViewModel() {
             // 🔐 Now safe to call after data is ready
             chatRepo.connectSocket(group.groupID!!)
         }
+    }
+
+    fun loadGroupValidity(valid : Boolean){
+        _isGroupValid.value=valid
+    }
+    fun turnOffGroupValidity(){
+        _isGroupValid.value=false
     }
 
     fun loadChatRoom() {

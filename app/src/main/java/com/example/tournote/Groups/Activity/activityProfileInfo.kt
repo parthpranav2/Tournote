@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality.Activity
+package com.example.tournote.Groups.Activity
 
 import android.os.Bundle
 import android.util.Log
@@ -9,7 +9,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.Adapter.commonGrpAdapter
+import com.example.tournote.Groups.Adapter.commonGrpAdapter
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.GroupMemberData
 import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.groupViewModel
 import com.example.tournote.R

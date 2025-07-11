@@ -20,7 +20,7 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
+import com.example.tournote.Groups.Activity.GroupSelectorActivity
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.databinding.ActivitySignUpBinding

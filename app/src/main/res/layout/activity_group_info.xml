@@ -5,7 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".Functionality.Activity.activityGroupInfo"
+    tools:context=".Groups.Activity.activityGroupInfo"
     android:background="@color/green_theme_Light">
 
 
@@ -234,6 +234,84 @@
                 </androidx.cardview.widget.CardView>
             </RelativeLayout>
 
+            <!--active user selection-->
+            <LinearLayout
+                android:id="@+id/relLayoutMemberSelector"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                android:layout_marginTop="10dp"
+                >
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Active Users"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <RelativeLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="330dp"
+                    android:background="@drawable/background_addmembers"
+                    android:layout_marginTop="5dp"
+                    >
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        >
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            >
+
+                            <EditText
+                                android:id="@+id/txtSearch"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:background="@drawable/textbox_creategroup_searchmembers"
+                                android:paddingLeft="40dp"
+                                android:hint="Search Name"
+                                android:textSize="15sp"
+                                android:textColorHint="@color/black"
+                                android:textColor="@color/black"
+                                android:scrollbars="vertical"
+                                android:layout_margin="8dp"
+                                />
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/search"
+                                android:layout_centerVertical="true"
+                                android:layout_marginLeft="20dp"
+                                />
+                        </RelativeLayout>
+
+                        <androidx.cardview.widget.CardView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            app:cardCornerRadius="16dp"
+                            app:cardBackgroundColor="#242626"
+                            android:layout_margin="2dp"
+                            >
+
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvActiveUserList"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="5dp"
+                                tools:listitem="@layout/searchmembers_rvitem" />
+
+                        </androidx.cardview.widget.CardView>
+
+                    </LinearLayout>
+
+                </RelativeLayout>
+            </LinearLayout>
+
             <!-- Action Buttons -->
             <RelativeLayout
                 android:id="@+id/btnAddMembers"
@@ -242,6 +320,7 @@
                 android:layout_marginTop="20dp"
                 android:clickable="true"
                 android:focusable="true"
+                android:visibility="visible"
                 android:background="@drawable/greenbutton">
 
                 <TextView
@@ -254,6 +333,8 @@
                     android:textSize="18sp" />
             </RelativeLayout>
 
+
+
             <RelativeLayout
                 android:id="@+id/btnLeaveGroup"
                 android:layout_width="match_parent"
@@ -261,13 +342,13 @@
                 android:layout_marginTop="10dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="@drawable/textbox">
+                android:background="@drawable/redbutton">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Leave Group"
-                    android:textColor="#EB7167"
+                    android:textColor="@color/white"
                     android:layout_centerInParent="true"
                     android:textStyle="bold"
                     android:textSize="18sp" />
@@ -281,18 +362,57 @@
                 android:layout_marginTop="10dp"
                 android:clickable="true"
                 android:focusable="true"
-                android:background="@drawable/textbox"
                 android:visibility="gone">
 
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Disable Tracking"
+                    android:textColor="#5EA075"
+                    android:layout_centerInParent="true"
+                    android:textStyle="bold"
+                    android:textSize="18sp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/btnDeleteGroup"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="30dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone"
+                android:background="@drawable/redbutton">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Delete Group"
+                    android:textColor="@color/white"
+                    android:layout_centerInParent="true"
+                    android:textStyle="bold"
+                    android:textSize="18sp" />
+            </RelativeLayout>
+
+            <RelativeLayout
+                android:id="@+id/btnEndTrip"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginTop="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="End Trip"
                     android:textColor="#EB7167"
                     android:layout_centerInParent="true"
                     android:textStyle="bold"
                     android:textSize="18sp" />
             </RelativeLayout>
+
         </LinearLayout>
     </ScrollView>
 

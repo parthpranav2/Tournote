@@ -12,8 +12,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.Activity.GroupSelectorActivity
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import kotlinx.coroutines.launch

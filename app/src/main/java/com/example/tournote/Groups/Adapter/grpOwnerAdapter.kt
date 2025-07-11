@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality.Adapter
+package com.example.tournote.Groups.Adapter
 
 import android.content.Context
 import android.content.Intent
@@ -10,7 +10,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat.startActivity
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.example.tournote.Functionality.Activity.activityProfileInfo
+import com.example.tournote.Groups.Activity.activityProfileInfo
 import com.example.tournote.R
 import com.example.tournote.UserModel
 

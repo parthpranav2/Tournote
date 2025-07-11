@@ -1,7 +1,7 @@
-package com.example.tournote.GroupSelector.Repository
+package com.example.tournote.Groups.Repository
 
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
+import com.example.tournote.Groups.DataClass.GroupInfoModel
 import com.example.tournote.Onboarding.Repository.authRepository
 import com.example.tournote.UserModel
 import com.google.firebase.Firebase

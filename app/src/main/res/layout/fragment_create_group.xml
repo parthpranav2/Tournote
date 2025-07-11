@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    tools:context=".GroupSelector.Fragment.CreateGroupFragment"
+    tools:context=".Groups.Fragment.CreateGroupFragment"
     android:background="@color/green_theme_Light">
 
     <ProgressBar
@@ -213,66 +213,84 @@
 
             </RelativeLayout>
 
-            <RelativeLayout
+
+            <!--active user selection-->
+            <LinearLayout
                 android:id="@+id/relLayoutMemberSelector"
                 android:layout_width="match_parent"
-                android:layout_height="330dp"
-                android:background="@drawable/background_addmembers"
-                android:layout_marginTop="10dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
                 android:visibility="gone"
+                android:layout_marginTop="10dp"
                 >
-                <LinearLayout
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Active Users"
+                    android:textColor="@color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
+
+                <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="vertical"
+                    android:layout_height="330dp"
+                    android:background="@drawable/background_addmembers"
+                    android:layout_marginTop="5dp"
                     >
-                    <RelativeLayout
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        >
-
-                        <EditText
-                            android:id="@+id/txtSearch"
-                            android:layout_width="match_parent"
-                            android:layout_height="50dp"
-                            android:background="@drawable/textbox_creategroup_searchmembers"
-                            android:paddingLeft="40dp"
-                            android:hint="Search Name"
-                            android:textSize="15sp"
-                            android:textColorHint="@color/black"
-                            android:textColor="@color/black"
-                            android:scrollbars="vertical"
-                            android:layout_margin="8dp"
-                            />
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:src="@drawable/search"
-                            android:layout_centerVertical="true"
-                            android:layout_marginLeft="20dp"
-                            />
-                    </RelativeLayout>
-
-                    <androidx.cardview.widget.CardView
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        app:cardCornerRadius="16dp"
-                        app:cardBackgroundColor="#242626"
-                        android:layout_margin="2dp"
+                        android:orientation="vertical"
                         >
+                        <RelativeLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            >
 
-                        <androidx.recyclerview.widget.RecyclerView
-                            android:id="@+id/rvActiveUserList"
+                            <EditText
+                                android:id="@+id/txtSearch"
+                                android:layout_width="match_parent"
+                                android:layout_height="50dp"
+                                android:background="@drawable/textbox_creategroup_searchmembers"
+                                android:paddingLeft="40dp"
+                                android:hint="Search Name"
+                                android:textSize="15sp"
+                                android:textColorHint="@color/black"
+                                android:textColor="@color/black"
+                                android:scrollbars="vertical"
+                                android:layout_margin="8dp"
+                                />
+                            <ImageView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:src="@drawable/search"
+                                android:layout_centerVertical="true"
+                                android:layout_marginLeft="20dp"
+                                />
+                        </RelativeLayout>
+
+                        <androidx.cardview.widget.CardView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:padding="5dp"
-                            tools:listitem="@layout/searchmembers_rvitem" />
+                            app:cardCornerRadius="16dp"
+                            app:cardBackgroundColor="#242626"
+                            android:layout_margin="2dp"
+                            >
 
-                    </androidx.cardview.widget.CardView>
+                            <androidx.recyclerview.widget.RecyclerView
+                                android:id="@+id/rvActiveUserList"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:padding="5dp"
+                                tools:listitem="@layout/searchmembers_rvitem" />
 
-                </LinearLayout>
+                        </androidx.cardview.widget.CardView>
 
-            </RelativeLayout>
+                    </LinearLayout>
+
+                </RelativeLayout>
+            </LinearLayout>
 
         </LinearLayout>
     </ScrollView>

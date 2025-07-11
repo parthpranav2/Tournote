@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.Fragment
+package com.example.tournote.Groups.Fragment
 
 import android.app.Activity.RESULT_OK
 import android.content.Intent
@@ -12,9 +12,9 @@ import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.tournote.GroupSelector.Adapter.AddUsers_CreateGroupRecyclerViewAdapter
-import com.example.tournote.GroupSelector.Adapter.SelectedUsers_CreateGroupRecyclerViewAdapter
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.Adapter.AddUsers_CreateGroupRecyclerViewAdapter
+import com.example.tournote.Groups.Adapter.SelectedUsers_CreateGroupRecyclerViewAdapter
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.UserModel
 import com.example.tournote.databinding.FragmentCreateGroupBinding
 
@@ -105,6 +105,7 @@ class CreateGroupFragment : Fragment() {
                 binding.progressBar.visibility=View.GONE
             }
         }
+
         viewModel.usersIn.observe(viewLifecycleOwner) { users ->
             usersIn = users
             adapter2 = SelectedUsers_CreateGroupRecyclerViewAdapter(requireContext(), users, viewModel)
@@ -113,6 +114,7 @@ class CreateGroupFragment : Fragment() {
             binding.relLayoutSelectedMembers.visibility =
                 if (users.size<=1) View.GONE else View.VISIBLE
         }
+
         viewModel.admins.observe(viewLifecycleOwner){ users->
             admins = users
         }

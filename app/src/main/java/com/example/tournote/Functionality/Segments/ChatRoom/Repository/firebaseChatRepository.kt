@@ -2,9 +2,7 @@ package com.example.tournote.Functionality.Segments.ChatRoom.Repository
 
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.groupData
 import com.example.tournote.Functionality.Segments.ChatRoom.DataClass.userData
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
 import com.google.firebase.Firebase
-import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.database
 import kotlinx.coroutines.tasks.await
 

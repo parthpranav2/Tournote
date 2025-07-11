@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.Activity
+package com.example.tournote.Groups.Activity
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,8 +10,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.viewpager2.widget.ViewPager2
-import com.example.tournote.GroupSelector.Adapter.GroupSelectorActivityPagerAdapter
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.Adapter.GroupSelectorActivityPagerAdapter
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.Onboarding.Activity.LogInActivity
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.R

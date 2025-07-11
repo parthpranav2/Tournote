@@ -1,5 +1,6 @@
 package com.example.tournote.Functionality.Segments.ChatRoom.Fragment
 
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -7,11 +8,16 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.PopupMenu
+import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.tournote.Functionality.Activity.MainActivity
+import com.example.tournote.Groups.Activity.activityGroupInfo
 import com.example.tournote.Functionality.Segments.ChatRoom.Adapter.ChatAdapter
 import com.example.tournote.Functionality.Segments.ChatRoom.Interface.MenuActionHandler
 import com.example.tournote.Functionality.Segments.ChatRoom.ViewModel.ChatViewModel
@@ -37,6 +43,10 @@ class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
     lateinit var buttonEdit : FloatingActionButton
     private var grp_id: String? = null
 
+    lateinit var moreOptions: ImageButton
+
+    private val viewModel: MainActivityViewModel by viewModels()
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -48,6 +58,34 @@ class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
         editTextMessage = view.findViewById<EditText>(R.id.editTextMessage)
         buttonSend = view.findViewById<FloatingActionButton>(R.id.buttonSend)
         buttonEdit = view.findViewById<FloatingActionButton>(R.id.buttonEdit)
+
+        //toolbar
+        val group_logo = view.findViewById<ImageView>(R.id.grp_logo)
+        val group_name = view.findViewById<TextView>(R.id.grp_name)
+        view.findViewById<LinearLayout>(R.id.toolbar).setOnClickListener {
+            val intent = Intent(requireContext(), activityGroupInfo::class.java)
+            //intent.putExtra("GROUP_ID", GlobalClass.GroupDetails_Everything.groupID)
+            startActivity(intent)
+        }
+
+        group_name.text = GlobalClass.GroupDetails_Everything.name
+        if (GlobalClass.GroupDetails_Everything.profilePic == "null" || GlobalClass.GroupDetails_Everything.profilePic.isNullOrBlank()) {
+            group_logo.setImageResource(R.drawable.defaultgroupimage)
+        } else {
+            // Load the image using Glide or any other image loading library
+            com.bumptech.glide.Glide.with(this)
+                .load(GlobalClass.GroupDetails_Everything.profilePic)
+                .placeholder(R.drawable.defaultgroupimage)
+                .error(R.drawable.defaultgroupimage)
+                .into(group_logo)
+        }
+
+        moreOptions = view.findViewById(R.id.more_options)
+
+        moreOptions.setOnClickListener {
+            showPopupMenu(it)
+        }
+
 
         chatAdapter = ChatAdapter(requireContext())
         mainViewModel.loadChatRoom()
@@ -96,19 +134,31 @@ class ChatsFragment : androidx.fragment.app.Fragment(), MenuActionHandler {
 //        }
 //    }
 
+    private fun showPopupMenu(anchor: View) {
+        val popup = PopupMenu(requireContext(), anchor)
+        popup.menuInflater.inflate(R.menu.menu_chat, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            onMenuActionSelected(item.itemId)
+            true
+        }
+
+        popup.show()
+    }
+
+
     override fun onResume() {
         super.onResume()
 
-        val mainActivity = activity as? MainActivity
 
         chatAdapter.selectionListener={
 
          if (it == true){
-             mainActivity?.moreOptions?.visibility = View.VISIBLE
+             moreOptions.visibility = View.VISIBLE
              buttonSend.visibility = View.GONE
              buttonEdit.visibility = View.VISIBLE
          }else{
-             mainActivity?.moreOptions?.visibility = View.GONE
+             moreOptions.visibility = View.GONE
              buttonSend.visibility = View.VISIBLE
              buttonEdit.visibility = View.GONE
          }

@@ -1,4 +1,4 @@
-package com.example.tournote.Functionality.Adapter
+package com.example.tournote.Groups.Adapter
 
 import android.content.Context
 import android.view.LayoutInflater

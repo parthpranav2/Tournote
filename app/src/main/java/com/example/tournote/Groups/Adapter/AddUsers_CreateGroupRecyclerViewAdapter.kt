@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.Adapter
+package com.example.tournote.Groups.Adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -10,7 +10,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import com.example.tournote.UserModel
 

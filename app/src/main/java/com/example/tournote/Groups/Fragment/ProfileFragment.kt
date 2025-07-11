@@ -1,8 +1,7 @@
-package com.example.tournote.GroupSelector.Fragment
+package com.example.tournote.Groups.Fragment
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +9,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import android.widget.Toast
 import androidx.fragment.app.viewModels
-import com.example.tournote.GroupSelector.Activity.GroupSelectorActivity
+import com.example.tournote.Groups.Activity.GroupSelectorActivity
 import com.example.tournote.Onboarding.Activity.LogInActivity
 import com.example.tournote.Onboarding.ViewModel.authViewModel
 import com.example.tournote.R

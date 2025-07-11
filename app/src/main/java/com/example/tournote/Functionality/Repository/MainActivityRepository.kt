@@ -121,6 +121,7 @@ class MainActivityRepository {
     }
 
 
+
     suspend fun EnableMyTrackingOnCurrentGroup() {
         try {
             val groupID = GlobalClass.GroupDetails_Everything.groupID ?: return
@@ -148,6 +149,7 @@ class MainActivityRepository {
     }
 
 
+
     suspend fun LeaveCurrentGroup() { // Parameter removed
         // Ensure GlobalClass.Me and its email are available
         val currentUser = GlobalClass.Me
@@ -163,7 +165,7 @@ class MainActivityRepository {
         val grpId = GlobalClass.GroupDetails_Everything.groupID
 
         if (grpId == null) {
-            println("Error: Group ID in GlobalClass.GroupDetails_Everything is null. Cannot leave group.")
+            Log.d("LeaveCurrentGroup", "Error: Group ID in GlobalClass.GroupDetails_Everything is null. Cannot leave group.")
             return
         }
 
@@ -177,22 +179,22 @@ class MainActivityRepository {
             // --- 1. Remove user from Members ---
             val memberRef = groupRef.child("Members").child(sanitizedEmail)
             memberRef.removeValue().await()
-            println("Removed user from group $grpId Members.")
+
 
             // --- 2. Remove user from Admins (if present) ---
             val adminRef = groupRef.child("Admins").child(sanitizedEmail)
             adminRef.removeValue().await()
-            println("Removed user from group $grpId Admins (if present).")
+
 
             // --- 3. Remove user from TrackFriends (if present) ---
             val trackFriendsRef = groupRef.child("TrackFriends").child(sanitizedEmail)
             trackFriendsRef.removeValue().await()
-            println("Removed user from group $grpId TrackFriends (if present).")
+
 
             // --- 4. Remove group ID from user's Groups section ---
             val userGroupsRef = userRef.child("Groups").child(grpId)
             userGroupsRef.removeValue().await()
-            println("Removed group $grpId from user $currentUserId's Groups.")
+
 
             // --- 5. Update GlobalClass.GroupDetails_Everything ---
             // IMPORTANT: Ensure GlobalClass.GroupDetails_Everything is the correct group
@@ -215,21 +217,179 @@ class MainActivityRepository {
                     admins = currentAdmins,
                     trackFriends = currentTrackFriends
                 )
-                println("GlobalClass.GroupDetails_Everything updated for group $grpId.")
             } else {
                 // This scenario should ideally not happen if GlobalClass is kept consistent,
                 // but it's a fallback.
-                println("Warning: GlobalClass.GroupDetails_Everything groupID mismatch. Local state might be inconsistent.")
+                Log.d("LeaveCurrentGroup", "Warning: GlobalClass.GroupDetails_Everything groupID mismatch. Local state might be inconsistent.")
             }
 
-            println("Successfully left group $grpId.")
-
         } catch (e: Exception) {
-            println("Error leaving group $grpId: ${e.message}")
+            Log.d("LeaveCurrentGroup", "Error leaving group $grpId: ${e.message}")
             throw e
         }
     }
 
+    suspend fun DeleteCurrentGroupFromRoot(){
+        // --- Fetch groupId from GlobalClass ---
+        val grpId = GlobalClass.GroupDetails_Everything.groupID
+
+        if (grpId == null) {
+            Log.d("DeleteCurrentGroupFromRoot", "Error: Group ID in GlobalClass.GroupDetails_Everything is null. Cannot delete group.")
+            return
+        }
+
+        try {
+            val groupRef = db.getReference("groups").child(grpId)
+
+            // --- 1. Get all members' emails (including owner and admins) to update their user branches ---
+            // We need to fetch the current state of members, admins, and owner to get their UIDs.
+            // It's safer to re-fetch this rather than relying solely on GlobalClass.GroupDetails_Everything
+            // in case it's stale, especially for a destructive operation like delete.
+
+            // Fetch current group details from Firebase for precise member UIDs
+            val groupDetailsResult = groupData(grpId) // Re-use your existing groupData function
+            if (groupDetailsResult.isFailure) {
+                Log.e("DeleteCurrentGroupFromRoot", "Failed to fetch group details for deletion: ${groupDetailsResult.exceptionOrNull()?.message}")
+                return // Cannot proceed without member info
+            }
+            val groupData = groupDetailsResult.getOrThrow()
+
+            val allGroupMembers = mutableSetOf<String>() // Use Set for unique UIDs
+            allGroupMembers.add(groupData.owner.uid!!) // Owner's UID
+            groupData.members.forEach { it.uid?.let { uid -> allGroupMembers.add(uid) } }
+            groupData.admins.forEach { it.uid?.let { uid -> allGroupMembers.add(uid) } }
+
+            // --- 2. Remove the group ID from each member's /users/{uid}/Groups branch ---
+            val userGroupsUpdates = mutableMapOf<String, Any?>()
+            for (memberUid in allGroupMembers) {
+                userGroupsUpdates["users/$memberUid/Groups/$grpId"] = null
+            }
+            // Perform a multi-path update for efficiency
+            if (userGroupsUpdates.isNotEmpty()) {
+                db.reference.updateChildren(userGroupsUpdates).await()
+                Log.d("DeleteCurrentGroupFromRoot", "Removed group $grpId from ${allGroupMembers.size} user's Groups branches.")
+            }
+
+
+            // --- 3. Delete the group from the /groups root ---
+            groupRef.removeValue().await()
+            Log.d("DeleteCurrentGroupFromRoot", "Deleted group $grpId from /groups root.")
+
+            // --- 4. Clear GlobalClass.GroupDetails_Everything if it was the deleted group ---
+            if (GlobalClass.GroupDetails_Everything.groupID == grpId) {
+                // Reset it to a default or null state, depending on how you manage initial group load
+                // For simplicity, let's set it to a default empty/null state if your model allows.
+                // Assuming you have a way to reset GlobalClass.GroupDetails_Everything to an initial state,
+                // or if it's okay to have its fields be null after deletion.
+                // If it must always contain valid data, you might set it to a "dummy" empty group.
+                // For now, setting owner to a dummy UserModel is necessary since it's non-nullable.
+                GlobalClass.GroupDetails_Everything = GroupData_Detailed_Model(
+                    groupID = null,
+                    name = null,
+                    description = null,
+                    profilePic = null,
+                    owner = UserModel(), // Provide a default/empty UserModel instance
+                    createdAt = null,
+                    isGroupValid = false,
+                    members = emptyList(),
+                    admins = emptyList(),
+                    trackFriends = emptyList()
+                )
+                Log.d("DeleteCurrentGroupFromRoot", "GlobalClass.GroupDetails_Everything cleared as group $grpId was deleted.")
+            }
+
+        }catch (e: Exception){
+            Log.d("DeleteCurrentGroupFromRoot", "Error deleting group $grpId: ${e.message}")
+            throw e
+        }
+    }
+
+    suspend fun AddMemberToGroup(UserInfo: UserModel) {
+        try {
+            // Get group ID from GlobalClass
+            val grpId = GlobalClass.GroupDetails_Everything.groupID
+
+            if (grpId == null) {
+                Log.d("AddMemberToGroup", "Error: Group ID in GlobalClass.GroupDetails_Everything is null. Cannot add member.")
+                return
+            }
+
+            // Get user email and UID
+            val userEmail = UserInfo.email
+            val userUid = UserInfo.uid
+
+            if (userEmail == null || userUid == null) {
+                Log.d("AddMemberToGroup", "Error: User email or UID is null. Cannot add member.")
+                return
+            }
+
+            // Sanitize email for Firebase keys (replace . with ,)
+            val sanitizedEmail = userEmail.replace(".", ",")
+
+            // Firebase references
+            val groupRef = db.getReference("groups").child(grpId)
+            val userRef = db.getReference("users").child(userUid)
+
+            // --- 1. Add user to group's Members section ---
+            val memberRef = groupRef.child("Members").child(sanitizedEmail)
+            memberRef.setValue(true).await()
+
+            // --- 2. Add group ID to user's Groups section ---
+            val userGroupsRef = userRef.child("Groups").child(grpId)
+            userGroupsRef.setValue(true).await()
+
+            // --- 3. Update GlobalClass.GroupDetails_Everything ---
+            // Check if the user is already a member to avoid duplicates
+            val currentMembers = GlobalClass.GroupDetails_Everything.members.toMutableList()
+            val isAlreadyMember = currentMembers.any { it.email == userEmail }
+
+            if (!isAlreadyMember) {
+                currentMembers.add(UserInfo)
+
+                // Create a new GroupData_Detailed_Model instance with updated members list
+                GlobalClass.GroupDetails_Everything = GlobalClass.GroupDetails_Everything.copy(
+                    members = currentMembers
+                )
+
+                Log.d("AddMemberToGroup", "Successfully added ${UserInfo.name} (${UserInfo.email}) to group $grpId")
+            } else {
+                Log.d("AddMemberToGroup", "User ${UserInfo.email} is already a member of group $grpId")
+            }
+
+        } catch (e: Exception) {
+            Log.e("AddMemberToGroup", "Error adding member to group: ${e.message}")
+            throw e
+        }
+    }
+
+    suspend fun EndTour(){
+        // --- Fetch groupId from GlobalClass ---
+        val grpId = GlobalClass.GroupDetails_Everything.groupID
+
+        if (grpId == null) {
+            Log.d("EndTour", "Error: Group ID in GlobalClass.GroupDetails_Everything is null. Cannot EndTour for the group.")
+            return
+        }
+
+        try {
+            val groupRef = db.getReference("groups").child(grpId)
+
+            groupRef.child("GroupDetails").child("isGroupValid").setValue(false)
+            groupRef.child("TrackFriends").removeValue().await()
+
+            GlobalClass.GroupDetails_Everything.isGroupValid=false
+
+            GlobalClass.GroupDetails_Everything=GlobalClass.GroupDetails_Everything.copy(trackFriends = emptyList())
+
+            Log.d("DeleteCurrentGroupFromRoot", "Deleted group $grpId from /groups root.")
+
+        }
+        catch (e: Exception){
+            Log.d("EndTour", "Error ending tour for group $grpId: ${e.message}")
+            throw e
+        }
+
+        }
 
 
     /*private fun logGroupInfo(group: GroupData_Detailed_Model) {

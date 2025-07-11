@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.ViewModel
+package com.example.tournote.Groups.ViewModel
 
 import android.content.Context
 import android.net.Uri
@@ -7,8 +7,8 @@ import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
-import com.example.tournote.GroupSelector.Repository.CreateGroupRepository
+import com.example.tournote.Groups.DataClass.GroupInfoModel
+import com.example.tournote.Groups.Repository.CreateGroupRepository
 import com.example.tournote.UserModel
 import kotlinx.coroutines.launch
 import java.io.File
@@ -119,7 +119,7 @@ class GroupSelectorActivityViewModel : ViewModel() {
 
                 if (result.isSuccess) {
                     val groupId = result.getOrNull()
-                    _toastmsg.postValue("Group created with ID: $groupId")
+                    //_toastmsg.postValue("Group created with ID: $groupId")
                     _resetUI.value=true
                     _navigateToHome.postValue(true)
                 } else {

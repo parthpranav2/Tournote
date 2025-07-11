@@ -25,7 +25,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter.GeocodingResultsAdapter
 import com.example.tournote.Functionality.Segments.SmartRoutePlanner.DataClass.GeocodingResultsDataClass
 import com.example.tournote.Functionality.Segments.SmartRoutePlanner.Adapter.RoutePointsAdapter
-import com.example.tournote.RoutePointDataClass
+import com.example.tournote.Functionality.Segments.SmartRoutePlanner.DataClass.RoutePointDataClass
 import com.example.tournote.databinding.FragmentSmartRoutePlannerBinding
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
@@ -912,18 +912,18 @@ class SmartRoutePlannerFragment: Fragment() {
                 showToast("Route found: $distance, $duration")
                 // Only update if it's not a smart route calculation
 
-                    val totalMinutes = Regex("""\d+""").find(duration)?.value?.toIntOrNull() ?: 0
-                    val totalDistance = Regex("""\d+""").find(distance)?.value?.toIntOrNull() ?: 0
-                    val hours = totalMinutes / 60
-                    val minutes = totalMinutes % 60
-                    val timeString = buildString {
-                        append("Total trip time: ")
-                        if (hours > 0) append("$hours hr ")
-                        if (minutes > 0) append("$minutes min")
-                    }
-                    binding.textViewTotalTripTime.text = timeString.trim()
-                    binding.textViewTotalTripDistance.text = "Total trip Distance : $totalDistance km"
-                    binding.routeDetails.visibility = View.VISIBLE
+                val totalMinutes = Regex("""\d+""").find(duration)?.value?.toIntOrNull() ?: 0
+                val totalDistance = Regex("""\d+""").find(distance)?.value?.toIntOrNull() ?: 0
+                val hours = totalMinutes / 60
+                val minutes = totalMinutes % 60
+                val timeString = buildString {
+                    append("Total trip time: ")
+                    if (hours > 0) append("$hours hr ")
+                    if (minutes > 0) append("$minutes min")
+                }
+                binding.textViewTotalTripTime.text = timeString.trim()
+                binding.textViewTotalTripDistance.text = "Total trip Distance : $totalDistance km"
+                binding.routeDetails.visibility = View.VISIBLE
             }
         }
 
@@ -932,18 +932,18 @@ class SmartRoutePlannerFragment: Fragment() {
             activity?.runOnUiThread {
                 //showToast("Route with stop found: $distance, $duration")
                 // Only update if it's not a smart route calculation
-                    val totalMinutes = Regex("""\d+""").find(duration)?.value?.toIntOrNull() ?: 0
-                    val totalDistance = Regex("""\d+""").find(distance)?.value?.toIntOrNull() ?: 0
-                    val hours = totalMinutes / 60
-                    val minutes = totalMinutes % 60
-                    val timeString = buildString {
-                        append("Total trip time: ")
-                        if (hours > 0) append("$hours hr ")
-                        if (minutes > 0) append("$minutes min")
-                    }
-                    binding.textViewTotalTripTime.text = timeString.trim()
-                    binding.textViewTotalTripDistance.text = "Total trip Distance : $totalDistance km"
-                    binding.routeDetails.visibility = View.VISIBLE
+                val totalMinutes = Regex("""\d+""").find(duration)?.value?.toIntOrNull() ?: 0
+                val totalDistance = Regex("""\d+""").find(distance)?.value?.toIntOrNull() ?: 0
+                val hours = totalMinutes / 60
+                val minutes = totalMinutes % 60
+                val timeString = buildString {
+                    append("Total trip time: ")
+                    if (hours > 0) append("$hours hr ")
+                    if (minutes > 0) append("$minutes min")
+                }
+                binding.textViewTotalTripTime.text = timeString.trim()
+                binding.textViewTotalTripDistance.text = "Total trip Distance : $totalDistance km"
+                binding.routeDetails.visibility = View.VISIBLE
             }
         }
 

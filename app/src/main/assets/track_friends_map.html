@@ -12,43 +12,39 @@
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
+            overflow: hidden; /* Prevent body scrollbars */
         }
         #map {
             height: 100vh;
             width: 100%;
+            touch-action: none; /* Disable default touch actions to prevent conflicts */
         }
 
         /* Custom marker styling */
         .custom-marker {
             /* This div itself now defines the area that will contain the centered image and ripples */
-            width: 60px; /* Base size of the visible marker area */
-            height: 80px; /* Increased height to accommodate pointer and dot */
+            width: 60px; /* Base size of the visible marker area, slightly larger than image */
+            height: 80px; /* Increased height to accommodate pointer and dot below image */
             position: relative;
-            /* Position the entire custom-marker div so its center is at the map coordinate */
-            transform: translate(-50%, -100%); /* Changed to position dot at the exact location */
+            /* Position the entire custom-marker div so its bottom center (where the dot is) is at the map coordinate */
+            transform: translate(-50%, -100%);
             display: flex; /* Use flexbox to easily center content */
             flex-direction: column; /* Stack elements vertically */
-            justify-content: flex-start;
-            align-items: center;
-            /* Ensure the marker background itself is circular if needed, but not required for image */
-            /* border-radius: 50%; */ /* Only if the *marker background* should be circular */
+            justify-content: flex-start; /* Align content to the top of the marker div */
+            align-items: center; /* Center horizontally within the marker div */
         }
 
         .custom-marker img {
-            width: 48px; /* Fixed width */
-            height: 48px; /* Fixed height - same as width for perfect circle */
-            border-radius: 50%; /* Perfect circle */
+            width: 48px; /* Fixed width for the image container */
+            height: 48px; /* Fixed height for the image container - ensures square for circle */
+            border-radius: 50%; /* Makes the image display as a perfect circle */
             border: 2px solid #fff; /* White border around the image */
-            box-shadow: 0 0 5px rgba(0,0,0,0.5);
-            object-fit: cover; /* Crop image to fill circle */
-            object-position: center center; /* Center the image within the circle */
-            display: block; /* Remove inline spacing */
-            flex-shrink: 0; /* Prevent flexbox shrinking */
-            min-width: 48px; /* Ensure minimum width */
-            min-height: 48px; /* Ensure minimum height */
-            max-width: 48px; /* Ensure maximum width */
-            max-height: 48px; /* Ensure maximum height */
-            z-index: 2; /* Ensure image is on top of ripples */
+            box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Subtle shadow for depth */
+            object-fit: cover; /* **This is crucial:** Crops the image to fit the container while maintaining aspect ratio */
+            object-position: center center; /* Centers the image content within the circular frame */
+            display: block; /* Ensures no extra space around the image */
+            flex-shrink: 0; /* Prevents the image from shrinking in flex container */
+            z-index: 2; /* Ensures image is on top of ripples */
             position: relative; /* For positioning within the marker */
         }
 
@@ -58,20 +54,22 @@
             height: 0;
             border-left: 6px solid transparent;
             border-right: 6px solid transparent;
-            border-top: 8px solid #fff;
-            margin-top: 2px;
-            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3));
+            border-top: 8px solid #fff; /* White color for the pointer */
+            margin-top: 2px; /* Small gap between image and pointer */
+            filter: drop-shadow(0 2px 3px rgba(0,0,0,0.3)); /* Shadow for the pointer */
+            z-index: 2; /* Same as image, or just below */
         }
 
         /* Location dot at the exact position */
         .location-dot {
             width: 8px;
             height: 8px;
-            background-color: #ff4444;
-            border-radius: 50%;
-            border: 2px solid #fff;
-            box-shadow: 0 0 3px rgba(0,0,0,0.5);
-            margin-top: 2px;
+            background-color: #4285F4; /* Changed to Google Maps blue */
+            border-radius: 50%; /* Perfect circle */
+            border: 2px solid #fff; /* White border for the dot */
+            box-shadow: 0 0 3px rgba(0,0,0,0.5); /* Shadow for the dot */
+            margin-top: 2px; /* Small gap between pointer and dot */
+            z-index: 3; /* Ensure the dot is on top of everything else as it's the precise location */
         }
 
         /* Ripple/Signal Animation */
@@ -79,12 +77,12 @@
             position: absolute; /* Position ripples relative to .custom-marker */
             border-radius: 50%;
             background-color: rgba(0, 128, 0, 0.4); /* Green color with transparency */
-            animation: ripple-animation 3s infinite; /* CHANGED: Animation duration to 3s */
-            z-index: 1; /* Below the image */
-            /* Center the ripples around the image circle */
-            top: 24px; /* Center on the 48px image (24px is center) */
-            left: 50%;
-            transform: translate(-50%, -50%);
+            animation: ripple-animation 3s infinite; /* Animation duration set to 3 seconds */
+            z-index: 1; /* Below the image and dot */
+            /* Center the ripples around the profile image circle (48px diameter) */
+            top: 24px; /* Half of image height (48px/2) to align center with image */
+            left: 50%; /* Center horizontally */
+            transform: translate(-50%, -50%); /* Adjust to truly center the ripple origin */
         }
 
         .ripple.ripple-1 {
@@ -96,7 +94,6 @@
         .ripple.ripple-3 {
             animation-delay: 2s; /* Adjusted delay for smoother, slower sequence */
         }
-
 
         @keyframes ripple-animation {
             0% {
@@ -131,7 +128,8 @@
     }).addTo(map);
 
     // Set a default view for the map to ensure it loads
-    map.setView([21.1458, 79.0882], 5); // Default to a reasonable zoom level for a country view
+    // Current location is Dhule, Maharashtra, India (approximate coordinates)
+    map.setView([21.1458, 79.0882], 5); // Default to a reasonable zoom level for a country/state view
 
     // Custom icon function that generates a divIcon with image and ripples
     function createProfilePicIcon(profilePicUrl) {
@@ -145,7 +143,7 @@
                 <div class="ripple ripple-2"></div>
                 <div class="ripple ripple-3"></div>
             `,
-            iconSize: [60, 80], /* Updated to match new marker height */
+            iconSize: [60, 80], /* Updated to match new marker width and height */
             iconAnchor: [30, 80] /* Anchor at the bottom center (where the dot is) */
         });
     }
@@ -154,7 +152,12 @@
     var friendMarkers = {};
     var userMarker = null;
 
-    // Function to set user location (called from Android)
+    /**
+     * Sets the user's location on the map.
+     * @param {number} lat - Latitude of the user's location.
+     * @param {number} lng - Longitude of the user's location.
+     * @param {string} profilePicUrl - URL of the user's profile picture.
+     */
     function setUserLocation(lat, lng, profilePicUrl) {
         // Remove existing user marker if any
         if (userMarker) {
@@ -162,12 +165,12 @@
         }
 
         // Center map on user's location
-        map.setView([lat, lng], 13);
+        map.setView([lat, lng], 13); // Zoom level 13 is good for a city view
 
         // Add marker for user's location using the custom icon
         userMarker = L.marker([lat, lng], {icon: createProfilePicIcon(profilePicUrl)}).addTo(map);
 
-        // Create detailed popup content
+        // Initial detailed popup content
         var popupContent = '<div>' +
             '<b>📍 Your Current Location</b><br>' +
             '🌍 Coordinates: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '<br>' +
@@ -177,28 +180,36 @@
 
         userMarker.bindPopup(popupContent);
 
-        // Reverse geocoding to get address (optional)
+        // Reverse geocoding to get address (optional, updates popup)
         reverseGeocode(lat, lng);
     }
 
-    // Function to get address from coordinates (reverse geocoding)
+    /**
+     * Performs reverse geocoding to get an address from coordinates and updates the user marker's popup.
+     * @param {number} lat - Latitude.
+     * @param {number} lng - Longitude.
+     */
     function reverseGeocode(lat, lng) {
-        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng)
+        fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat=' + lat + '&lon=' + lng + '&zoom=18&addressdetails=1')
             .then(response => response.json())
             .then(data => {
                 if (data && data.display_name) {
                     var address = data.display_name;
 
                     // Update marker popup with address
-                    if (userMarker) {
-                        var popupContent = '<div>' +
-                            '<b>📍 Your Current Location</b><br>' +
-                            '🌍 Coordinates: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '<br>' +
-                            '📍 Address: ' + address + '<br>' +
-                            '📱 Source: Android GPS<br>' +
-                            '⏰ Updated: ' + new Date().toLocaleTimeString() +
-                            '</div>';
-                        userMarker.getPopup().setContent(popupContent);
+                    if (userMarker && userMarker.getPopup()) { // Check if popup exists
+                        var currentContent = userMarker.getPopup().getContent();
+                        // Only add address if it's not already there or is a placeholder
+                        if (!currentContent.includes('📍 Address:')) {
+                            var newContent = '<div>' +
+                                '<b>📍 Your Current Location</b><br>' +
+                                '🌍 Coordinates: ' + lat.toFixed(6) + ', ' + lng.toFixed(6) + '<br>' +
+                                '📍 Address: ' + address + '<br>' + // Add address
+                                '📱 Source: Android GPS<br>' +
+                                '⏰ Updated: ' + new Date().toLocaleTimeString() +
+                                '</div>';
+                            userMarker.getPopup().setContent(newContent);
+                        }
                     }
                 }
             })
@@ -207,9 +218,18 @@
             });
     }
 
-    // Function to add a new friend marker (can be called from Android)
+    /**
+     * Adds a new friend marker to the map. If a marker with the same ID exists, it will be updated.
+     * @param {string} id - Unique ID for the friend.
+     * @param {string} name - Name of the friend.
+     * @param {number} lat - Latitude of the friend's location.
+     * @param {number} lng - Longitude of the friend's location.
+     * @param {string} status - Friend's status (e.g., 'online', 'offline').
+     * @param {string} profilePicUrl - URL of the friend's profile picture.
+     */
     function addFriendMarker(id, name, lat, lng, status, profilePicUrl) {
         if (friendMarkers[id]) {
+            // If marker already exists, remove it before adding a new one (to ensure icon updates)
             map.removeLayer(friendMarkers[id]);
         }
 
@@ -224,54 +244,72 @@
         friendMarkers[id] = marker;
     }
 
-    // Function to update friend's location
+    /**
+     * Updates an existing friend's location and popup on the map.
+     * If the friend marker does not exist, it will add a new one.
+     * @param {string} id - Unique ID for the friend.
+     * @param {number} lat - New latitude of the friend's location.
+     * @param {number} lng - New longitude of the friend's location.
+     * @param {string} status - Friend's updated status.
+     * @param {string} profilePicUrl - Updated URL of the friend's profile picture.
+     */
     function updateFriendLocation(id, lat, lng, status, profilePicUrl) {
         if (friendMarkers[id]) {
             var marker = friendMarkers[id];
             marker.setLatLng([lat, lng]);
 
-            // If the profile picture might change, re-create the icon, otherwise just update lat/lng
-            if (profilePicUrl) {
-                 marker.setIcon(createProfilePicIcon(profilePicUrl));
-            }
+            // Always re-create the icon to ensure profile picture changes are reflected
+            marker.setIcon(createProfilePicIcon(profilePicUrl));
 
             // Update popup content
-            var name = "Friend " + id;
+            // Placeholder name if actual name isn't passed for update
+            var name = marker.getPopup() ? marker.getPopup().getContent().match(/<b>👤 (.*?)<\/b>/)?.[1] || "Friend " + id : "Friend " + id;
             var popupContent = '<div>' +
                 '<b>👤 ' + name + '</b><br>' +
                 '🟢 Status: ' + (status || 'online') + '<br>' +
                 '📍 Lat: ' + lat.toFixed(4) + ', Lng: ' + lng.toFixed(4) + '<br>' +
-                '<small>⏰ Last seen: Just now</small>' +
+                '<small>⏰ Last seen: ' + new Date().toLocaleTimeString() + '</small>' +
                 '</div>';
             marker.getPopup().setContent(popupContent);
         } else {
+            // If marker doesn't exist, add it as a new one
             addFriendMarker(id, "Friend " + id, lat, lng, status, profilePicUrl);
         }
     }
 
-    // Function to remove friend marker
+    /**
+     * Removes a friend's marker from the map.
+     * @param {string} id - Unique ID of the friend to remove.
+     */
     function removeFriendMarker(id) {
         if (friendMarkers[id]) {
             map.removeLayer(friendMarkers[id]);
             delete friendMarkers[id];
+            console.log('Removed friend marker:', id);
         }
     }
 
-    // Function to center map on specific coordinates
+    /**
+     * Centers the map on specific coordinates with an optional zoom level.
+     * @param {number} lat - Latitude to center on.
+     * @param {number} lng - Longitude to center on.
+     * @param {number} [zoom=13] - Optional zoom level. Defaults to 13.
+     */
     function centerMap(lat, lng, zoom) {
         map.setView([lat, lng], zoom || 13);
+        console.log('Map centered on:', [lat, lng], 'Zoom:', zoom || 13);
     }
 
-    // Map event listeners
+    // Map event listeners (for debugging/logging)
     map.on('moveend', function() {
-        console.log('Map moved to: ' + map.getCenter());
+        // console.log('Map moved to: ' + map.getCenter().lat.toFixed(4) + ', ' + map.getCenter().lng.toFixed(4));
     });
 
     map.on('zoomend', function() {
-        console.log('Map zoom level: ' + map.getZoom());
+        // console.log('Map zoom level: ' + map.getZoom());
     });
 
-    // Auto-refresh location every 30 seconds (optional) - popup content only
+    // Auto-refresh user marker's popup "Updated" time every 30 seconds
     setInterval(function() {
         if (userMarker && userMarker.getPopup().isOpen()) { // Only update if popup is open
             var popup = userMarker.getPopup();
@@ -281,7 +319,34 @@
                 popup.setContent(updatedContent);
             }
         }
-    }, 30000);
+    }, 30000); // 30 seconds
+
+    // --- Example Usage (for testing in a browser or initial load) ---
+    // You would call these functions from your Android code via WebView.evaluateJavascript()
+
+    // Example: Set user location (Dhule)
+    // setUserLocation(21.1738, 74.3214, 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a2/National_Geographic_Lion_%286826622436%29.jpg/640px-National_Geographic_Lion_%286826622436%29.jpg');
+    // setUserLocation(21.1458, 79.0882, 'https://via.placeholder.com/48/FF0000/FFFFFF?text=YOU');
+
+    // Example: Add a friend
+    // setTimeout(() => {
+    //     addFriendMarker('friend1', 'Alice', 21.1500, 79.0950, 'online', 'https://via.placeholder.com/48/00FF00/FFFFFF?text=AL');
+    // }, 2000);
+
+    // Example: Add another friend
+    // setTimeout(() => {
+    //     addFriendMarker('friend2', 'Bob', 21.1400, 79.0800, 'busy', 'https://via.placeholder.com/48/0000FF/FFFFFF?text=BOB');
+    // }, 4000);
+
+    // Example: Update friend's location
+    // setTimeout(() => {
+    //     updateFriendLocation('friend1', 21.1600, 79.1000, 'online', 'https://via.placeholder.com/48/FFFF00/000000?text=AL');
+    // }, 6000);
+
+    // Example: Remove a friend
+    // setTimeout(() => {
+    //     removeFriendMarker('friend2');
+    // }, 8000);
 </script>
 </body>
 </html>

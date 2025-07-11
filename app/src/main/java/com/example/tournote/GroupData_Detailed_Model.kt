@@ -7,7 +7,7 @@ data class GroupData_Detailed_Model(
     val profilePic: String? = null,
     val owner: UserModel,
     val createdAt: Long? = null,
-    val isGroupValid: Boolean? = false,
+    var isGroupValid: Boolean? = false,
     val members : List<UserModel>,//no need to pass id...this will be processed info
     val admins : List<UserModel>,//no need to pass id...this will be processed info
     val trackFriends : List<String>? = null

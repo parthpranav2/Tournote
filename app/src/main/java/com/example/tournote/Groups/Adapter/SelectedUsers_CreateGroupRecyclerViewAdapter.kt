@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.Adapter
+package com.example.tournote.Groups.Adapter
 
 import android.content.Context
 import android.view.LayoutInflater
@@ -8,11 +8,9 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.constraintlayout.widget.ConstraintLayout
-import androidx.lifecycle.LifecycleOwner
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
-import com.bumptech.glide.manager.Lifecycle
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import com.example.tournote.UserModel
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -62,11 +60,10 @@ class SelectedUsers_CreateGroupRecyclerViewAdapter(
         }
 
         // Long click to show admin options
-        holder.body.setOnLongClickListener {
-            if(holder.name.text!="(You)"){
+        holder.body.setOnClickListener {
+            if(holder.name.text!="(You)") {
                 showAdminBottomSheet(user, position)
             }
-            true
         }
     }
 

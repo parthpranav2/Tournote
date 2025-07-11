@@ -1,4 +1,4 @@
-package com.example.tournote
+package com.example.tournote.Functionality.Segments.SmartRoutePlanner.DataClass
 
 data class RoutePointDataClass(
     val name: String,
@@ -7,4 +7,3 @@ data class RoutePointDataClass(
     val isStartPoint: Boolean = false,
     val isEndPoint: Boolean = false
 )
-

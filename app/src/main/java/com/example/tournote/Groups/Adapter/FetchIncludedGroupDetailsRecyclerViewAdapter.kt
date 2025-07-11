@@ -1,4 +1,4 @@
-package com.example.tournote.GroupSelector.Adapter
+package com.example.tournote.Groups.Adapter
 
 import android.content.Context
 import android.content.Intent
@@ -13,8 +13,8 @@ import com.bumptech.glide.Glide
 import com.example.tournote.Functionality.Activity.MainActivity
 import com.example.tournote.Functionality.Repository.MainActivityRepository
 import com.example.tournote.GlobalClass
-import com.example.tournote.GroupSelector.DataClass.GroupInfoModel
-import com.example.tournote.GroupSelector.ViewModel.GroupSelectorActivityViewModel
+import com.example.tournote.Groups.DataClass.GroupInfoModel
+import com.example.tournote.Groups.ViewModel.GroupSelectorActivityViewModel
 import com.example.tournote.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
