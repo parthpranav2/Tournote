@@ -125,10 +125,13 @@ class MainActivityRepository {
     suspend fun EnableMyTrackingOnCurrentGroup() {
         try {
             val groupID = GlobalClass.GroupDetails_Everything.groupID ?: return
+            val uID = GlobalClass.Me?.uid ?: return
             val email = GlobalClass.Me?.email?.replace(".",",") ?: return  // prevent null call
 
             val groupRef = db.getReference("groups").child(groupID).child("TrackFriends")
+            val userRef = db.getReference("users").child(uID).child("GroupsTrackingMe")
             groupRef.child(email).setValue(true).await()
+            userRef.child(groupID).setValue(true).await()
 
         } catch (e: Exception) {
             Log.e("EnableTracking", "Error enabling tracking: ${e.message}")
@@ -138,10 +141,13 @@ class MainActivityRepository {
     suspend fun DisableMyTrackingOnCurrentGroup() {
         try {
             val groupID = GlobalClass.GroupDetails_Everything.groupID ?: return
+            val uID = GlobalClass.Me?.uid ?: return
             val email = GlobalClass.Me?.email?.replace(".",",") ?: return
 
             val groupRef = db.getReference("groups").child(groupID).child("TrackFriends")
+            val userRef = db.getReference("users").child(uID).child("GroupsTrackingMe")
             groupRef.child(email).removeValue().await()
+            userRef.child(groupID).removeValue().await()
 
         } catch (e: Exception) {
             Log.e("DisableTracking", "Error disabling tracking: ${e.message}")

@@ -37,6 +37,7 @@
         .custom-marker img {
             width: 48px; /* Fixed width for the image container */
             height: 48px; /* Fixed height for the image container - ensures square for circle */
+            aspect-ratio: 1 / 1; /* 👈 Force square ((MOST IMPORTANT TO KEEP THE SHAPE OF IMAGE BOX CIRCULAR))*/
             border-radius: 50%; /* Makes the image display as a perfect circle */
             border: 2px solid #fff; /* White border around the image */
             box-shadow: 0 0 5px rgba(0,0,0,0.5); /* Subtle shadow for depth */
