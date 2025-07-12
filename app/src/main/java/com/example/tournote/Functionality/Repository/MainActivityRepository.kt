@@ -31,7 +31,6 @@ class MainActivityRepository {
             // 2. Get raw member/admin/trackFriends email keys (unsanitized, with `,`)
             val rawMemberKeys = groupRef.child("Members").get().await().children.mapNotNull { it.key }
             val rawAdminKeys = groupRef.child("Admins").get().await().children.mapNotNull { it.key }
-            // NEW: Fetch raw track friends keys
             val rawTrackFriendKeys = groupRef.child("TrackFriends").get().await().children.mapNotNull { it.key }
 
 
@@ -39,14 +38,14 @@ class MainActivityRepository {
             val memberEmails = rawMemberKeys.map { it.replace(",", ".") }
             val adminEmails = rawAdminKeys.map { it.replace(",", ".") }
             val ownerEmail = ownerID?.replace(",",".")
-            // NEW: Sanitize track friends keys directly into the list for the model
             val trackFriendEmails = rawTrackFriendKeys.map { it.replace(",", ".") }
 
 
-            // 4. Fetch all users and match by email for members, admins, and owner
+            // 4. Fetch all users and match by email for members, admins, owner, and trackFriends
             val usersSnap = db.getReference("users").get().await()
             val membersList = mutableListOf<UserModel>()
             val adminsList = mutableListOf<UserModel>()
+            val trackFriendsList = mutableListOf<UserModel>() // NEW: List for track friends
             var owner : UserModel?=null
 
             usersSnap.children.forEach { userSnap ->
@@ -65,7 +64,7 @@ class MainActivityRepository {
                     if (email in memberEmails) membersList.add(user)
                     if (email in adminEmails) adminsList.add(user)
                     if (email == ownerEmail) owner = user
-                    // No need to add to trackFriendsList<UserModel> here, as it's now List<String>
+                    if (email in trackFriendEmails) trackFriendsList.add(user) // NEW: Add to trackFriendsList
                 }
             }
 
@@ -79,7 +78,7 @@ class MainActivityRepository {
                 createdAt = createdAt,
                 members = membersList,
                 admins = adminsList,
-                trackFriends = trackFriendEmails // Assign the list of sanitized emails directly
+                trackFriends = trackFriendsList // Assign the list of UserModel directly
             )
 
             // ✅ Log all group details (uncomment if needed)
@@ -214,8 +213,9 @@ class MainActivityRepository {
                 val currentAdmins = GlobalClass.GroupDetails_Everything.admins.toMutableList()
                 currentAdmins.removeAll { it.email == currentUserEmail }
 
-                val currentTrackFriends = GlobalClass.GroupDetails_Everything.trackFriends?.toMutableList() ?: mutableListOf()
-                currentTrackFriends.remove(currentUserEmail)
+                // Now `trackFriends` is `List<UserModel>`, so remove by email
+                val currentTrackFriends = GlobalClass.GroupDetails_Everything.trackFriends.toMutableList()
+                currentTrackFriends.removeAll { it.email == currentUserEmail }
 
                 // Create a new GroupData_Detailed_Model instance with updated lists
                 GlobalClass.GroupDetails_Everything = GlobalClass.GroupDetails_Everything.copy(
@@ -261,7 +261,7 @@ class MainActivityRepository {
             val groupData = groupDetailsResult.getOrThrow()
 
             val allGroupMembers = mutableSetOf<String>() // Use Set for unique UIDs
-            allGroupMembers.add(groupData.owner.uid!!) // Owner's UID
+            groupData.owner.uid?.let { allGroupMembers.add(it) } // Owner's UID
             groupData.members.forEach { it.uid?.let { uid -> allGroupMembers.add(uid) } }
             groupData.admins.forEach { it.uid?.let { uid -> allGroupMembers.add(uid) } }
 
@@ -395,7 +395,7 @@ class MainActivityRepository {
             throw e
         }
 
-        }
+    }
 
 
     /*private fun logGroupInfo(group: GroupData_Detailed_Model) {

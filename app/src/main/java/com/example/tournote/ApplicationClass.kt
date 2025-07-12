@@ -1,8 +1,13 @@
 package com.example.tournote
-
 import android.app.Application
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
+import android.os.Build
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.cloudinary.android.MediaManager
+import com.example.tournote.R
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
 import com.google.firebase.database.FirebaseDatabase
@@ -13,7 +18,6 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
 
 class ApplicationClass : Application() {
-
     private var cloud_name: String? = null
     private var api_key: String? = null
     private var api_secret: String? = null
@@ -21,8 +25,28 @@ class ApplicationClass : Application() {
     // Hold a reference to the secondary FirebaseApp instance
     private var secondaryFirebaseApp: FirebaseApp? = null
 
+    companion object {
+        // Notification channel constants
+        const val LOCATION_CHANNEL_ID = "location_tracking_channel"
+        const val LOCATION_CHANNEL_NAME = "Location Tracking"
+        const val LOCATION_CHANNEL_DESCRIPTION = "Notifications for location tracking service"
+
+        // Notification ID
+        const val LOCATION_NOTIFICATION_ID = 1001
+
+        // Application instance
+        lateinit var instance: ApplicationClass
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+        instance = this
+
+        // Create notification channels
+        createNotificationChannels()
+
+
 
         // IMPORTANT: Perform asynchronous initialization using coroutines
         GlobalScope.launch(Dispatchers.Main) { // Use Dispatchers.Main if you need UI updates, otherwise Dispatchers.IO
@@ -60,6 +84,8 @@ class ApplicationClass : Application() {
             }
         }
     }
+
+
 
     /**
      * Data class to hold the fetched Firebase App details.
@@ -172,5 +198,70 @@ class ApplicationClass : Application() {
                 false
             }
         }
+    }
+
+
+
+    /**
+     * Create notification channels for different types of notifications
+     */
+    private fun createNotificationChannels() {
+        // Only create channels for Android O and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+            // Location tracking channel
+            val locationChannel = NotificationChannel(
+                LOCATION_CHANNEL_ID,
+                LOCATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_LOW // Low importance for background services
+            ).apply {
+                description = LOCATION_CHANNEL_DESCRIPTION
+                // Disable sound and vibration for location tracking
+                enableVibration(false)
+                setSound(null, null)
+                // Optional: Set LED light color
+                enableLights(true)
+                lightColor = android.graphics.Color.BLUE
+            }
+
+            // Create the channel
+            notificationManager.createNotificationChannel(locationChannel)
+        }
+    }
+
+    /**
+     * Create a notification for the location tracking service
+     */
+    fun createLocationTrackingNotification(): NotificationCompat.Builder {
+        return NotificationCompat.Builder(this, LOCATION_CHANNEL_ID)
+            .setContentTitle("Location Tracking Active")
+            .setContentText("Your location is being tracked and uploaded to Firebase")
+            .setSmallIcon(android.R.drawable.ic_menu_mylocation) // Using system location icon
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setOngoing(true) // Makes the notification persistent
+            .setAutoCancel(false) // Prevent dismissal by swipe
+            .setShowWhen(false) // Don't show timestamp
+    }
+
+    /**
+     * Create a notification for location tracking errors
+     */
+    fun createLocationErrorNotification(errorMessage: String): NotificationCompat.Builder {
+        return NotificationCompat.Builder(this, LOCATION_CHANNEL_ID)
+            .setContentTitle("Location Tracking Error")
+            .setContentText(errorMessage)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert) // Using system error icon
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setCategory(NotificationCompat.CATEGORY_ERROR)
+            .setAutoCancel(true) // Allow dismissal
+    }
+
+    /**
+     * Get notification manager instance
+     */
+    fun getNotificationManager(): NotificationManager {
+        return getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     }
 }

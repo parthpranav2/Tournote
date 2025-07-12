@@ -108,8 +108,7 @@ class activityGroupInfo : AppCompatActivity() {
         val currentUserEmail = currentUser?.email
 
         val isTracked = (currentUserEmail != null &&
-                grpData.trackFriends?.contains(currentUserEmail) == true)
-
+                grpData.trackFriends.any { it.email == currentUser.email } == true)
 
 
         binding.btnAddMembers.setOnClickListener {
@@ -161,13 +160,17 @@ class activityGroupInfo : AppCompatActivity() {
                         mainRepo.DisableMyTrackingOnCurrentGroup() // This updates Firebase
                         binding.btnDisableTracking.visibility = View.GONE
 
-                        val currentTrackFriends = grpData.trackFriends?.toMutableList()
+                        val currentTrackFriends = grpData.trackFriends.toMutableList() // .trackFriends is now non-nullable List<UserModel>
 
-                        if (currentUserEmail != null && currentTrackFriends != null) {
-                            if (currentTrackFriends.remove(currentUserEmail)) {
-                                GlobalClass.GroupDetails_Everything = grpData.copy(
-                                    trackFriends = currentTrackFriends
-                                )
+                        if (currentUserEmail != null) {
+                            // Find the UserModel to remove based on email
+                            val userToRemove = currentTrackFriends.find { it.email == currentUserEmail }
+                            if (userToRemove != null) {
+                                if (currentTrackFriends.remove(userToRemove)) {
+                                    GlobalClass.GroupDetails_Everything = grpData.copy(
+                                        trackFriends = currentTrackFriends
+                                    )
+                                }
                             }
                         }
                     }

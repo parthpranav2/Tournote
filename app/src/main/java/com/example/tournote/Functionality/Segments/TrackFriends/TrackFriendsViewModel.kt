@@ -64,13 +64,13 @@ class TrackFriendsViewModel(application: Application) : AndroidViewModel(applica
         val currentUser = GlobalClass.Me
 
         if (currentUser?.email != null &&
-            GlobalClass.GroupDetails_Everything.trackFriends?.contains(currentUser.email) == true) {
+            GlobalClass.GroupDetails_Everything.trackFriends.any { it.email == currentUser.email } == true) {
             _trackingEnabled.value = true
             showMapAndRequestLocation()
         } else {
             viewModelScope.launch {
                 val isTracked = (currentUser?.email != null &&
-                        GlobalClass.GroupDetails_Everything.trackFriends?.contains(currentUser.email) == true)
+                        GlobalClass.GroupDetails_Everything.trackFriends.any { it.email == currentUser.email } == true)
 
                 if (GlobalClass.Me?.uid == GlobalClass.GroupDetails_Everything.owner.uid && !isTracked) {
                     enableTrackingForCurrentUser()
@@ -98,9 +98,9 @@ class TrackFriendsViewModel(application: Application) : AndroidViewModel(applica
             mainRepo.EnableMyTrackingOnCurrentGroup()
             val currentUserEmail = GlobalClass.Me?.email
             if (currentUserEmail != null) {
-                val currentTrackFriends = GlobalClass.GroupDetails_Everything.trackFriends?.toMutableList() ?: mutableListOf()
-                if (!currentTrackFriends.contains(currentUserEmail)) {
-                    currentTrackFriends.add(currentUserEmail)
+                val currentTrackFriends = GlobalClass.GroupDetails_Everything.trackFriends.toMutableList()
+                if (GlobalClass.Me != null && !currentTrackFriends.any { it.email == GlobalClass.Me!!.email }) {
+                    currentTrackFriends.add(GlobalClass.Me!!) // Add the current user's UserModel object
                     GlobalClass.GroupDetails_Everything = GlobalClass.GroupDetails_Everything.copy(
                         trackFriends = currentTrackFriends
                     )
@@ -176,7 +176,7 @@ class TrackFriendsViewModel(application: Application) : AndroidViewModel(applica
 
     fun isLocationRecent(location: Location): Boolean {
         val locationAge = System.currentTimeMillis() - location.time
-        return locationAge < 30000 // 30 seconds
+        return locationAge < 3000 // 30 seconds
     }
 
     private fun updateLocationOnMap(location: Location) {
