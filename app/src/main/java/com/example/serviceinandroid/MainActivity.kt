@@ -30,5 +30,6 @@ class MainActivity : AppCompatActivity() {
             intent.action= Actions.STOP.toString()
             startService(intent)
         }
+
     }
 }
